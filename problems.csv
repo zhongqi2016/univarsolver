@@ -5,7 +5,6 @@
 # b: right interval end
 
 
-
 name,objective,a,b
 prob1,x^2 - x,-2,2
 prob2,x^2 + x,-2,2
