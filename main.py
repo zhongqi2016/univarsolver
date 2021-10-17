@@ -2,6 +2,7 @@ import math
 import sympy as sym
 import pandas as pd
 import interval as ival
+import  uvarprob as uvpr
 
 from sortedcontainers import SortedList
 from sortedcontainers import SortedKeyList
@@ -17,7 +18,7 @@ def make_objective(func):
     print(sf)
     x = sym.symbols('x')
     f = sym.lambdify(x, sf)
-    print(f(2))
+    return f
 
 
 
@@ -47,7 +48,12 @@ while len(sl) > 0:
     print(sl.pop())
 problems = read_problems("problems.csv")
 print(problems)
-make_objective(problems.loc['prob1','objective'])
+obj = make_objective(problems.loc['prob1','objective'])
+print(obj(1))
+prob = uvpr.UniVarProblem('prob1', problems.loc['prob1','objective'], problems.loc['prob1','a'], problems.loc['prob1','b'])
+print(prob)
+print(prob.objective(prob.b))
+problems.to_csv('/tmp/prob.csv')
 # print(problems.objective)
 # print(problems.loc[lambda df : df['name'] == 'prob1'])
 # df1 = problems.loc[lambda df : df['name'] == 'prob1']
