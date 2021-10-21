@@ -222,4 +222,3 @@ def log(x, base):
         return Interval([math.log(x[0], base), math.log(x[1], base)])
     else:
         return Interval([math.log(x[1], base), math.log(x[0], base)])
-
