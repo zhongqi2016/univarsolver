@@ -2,9 +2,10 @@ import math
 import sympy as sym
 import pandas as pd
 import interval as ival
-import  uvarprob as uvpr
+import uvarprob as uvpr
+import bnb as bnb
 
-from sortedcontainers import SortedList
+# from sortedcontainers import SortedList
 from sortedcontainers import SortedKeyList
 
 
@@ -13,50 +14,55 @@ def read_problems(fname):
     return data
 
 
-def make_objective(func):
-    sf = sym.sympify(func)
-    print(sf)
-    x = sym.symbols('x')
-    f = sym.lambdify(x, sf)
-    return f
+
+class DummyProcessor:
+    def __init__(self, rec_v, rec_x, problem, eps):
+        self.rec_v = rec_v
+        self.rec_x = rec_x
+        self.problem = problem
+        self.eps = eps
+
+    def compute_bounds(self, sub):
+        sub.bound = self.problem.objective(sub.data).x[0]
+        c = sub.data.mid()
+        v = self.problem.objective(c)
+        if v < self.rec_v:
+            self.rec_x = c
+            self.rec_v = v
+
+    def process(self, sub):
+        print(sub)
+        sub_1 = bnb.Sub(sub.level + 1, 0, ival.Interval([sub.data.x[0], sub.data.mid()]))
+        self.compute_bounds(sub_1)
+        print(sub_1)
+        sub_2 = bnb.Sub(sub.level + 1, 0, ival.Interval([sub.data.mid(), sub.data.x[1]]))
+        self.compute_bounds(sub_2)
+        print(sub_2)
+        print(self.rec_v)
+        lst = []
+        if sub_1.bound < self.rec_v - self.eps:
+            lst.append(sub_1)
+        if sub_2.bound < self.rec_v - self.eps:
+            lst.append(sub_2)
+
+        return lst
 
 
-
-class Sub:
-    def __init__(self, level, bound, data):
-        self.level = level
-        self.bound = bound
-        self.data = data
-
-    def __repr__(self):
-        return "[ level = " + str(self.level) + ", bound = " + str(self.bound) + ", data =  " + str(self.data) + "]"
-
-I1 = ival.Interval([-1,1])
-s1 = Sub(1,-1,I1)
-print(s1)
-I2 = ival.Interval([-1,2])
-s2 = Sub(3,-1.1,I2)
-subs = [s1, s2]
-print (subs)
-# sl = SortedKeyList(key = lambda s : -s.bound)
-sl = SortedKeyList(key = lambda s : s.level)
-sl.update(subs)
-print(sl)
-sl.add(Sub(2, 2, ival.Interval([-2,1])))
-print(sl)
-while len(sl) > 0:
-    print(sl.pop())
 problems = read_problems("problems.csv")
 print(problems)
-obj = make_objective(problems.loc['prob1','objective'])
-print(obj(1))
-prob = uvpr.UniVarProblem('prob1', problems.loc['prob1','objective'], problems.loc['prob1','a'], problems.loc['prob1','b'])
+prob = uvpr.UniVarProblem('prob1', problems.loc['prob1','objective'], problems.loc['prob1','a'], problems.loc['prob1','b'], problems.loc['prob1','min_f'], problems.loc['prob1','mins_x'])
 print(prob)
-print(prob.objective(prob.b))
-problems.to_csv('/tmp/prob.csv')
-# print(problems.objective)
-# print(problems.loc[lambda df : df['name'] == 'prob1'])
-# df1 = problems.loc[lambda df : df['name'] == 'prob1']
-# print(df1.loc[0,'objective'])
-# make_objective(df1.loc[0,'objective'])
-# print ("Hello")
+# problems.to_csv('/tmp/prob.csv')
+dp = DummyProcessor(0, prob.objective(0), prob, 0.001)
+
+sl = SortedKeyList(key = lambda s : s.level)
+sub = bnb.Sub(0, 0, ival.Interval([prob.a, prob.b]))
+dp.compute_bounds(sub)
+sl.add(sub)
+print(sl)
+cnt = 1000
+print("steps performed: ", bnb.bnb(sl, cnt, dp))
+print(sl)
+
+# while len(sl) > 0:
+#     print(sl.pop())
