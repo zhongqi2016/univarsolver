@@ -1,9 +1,29 @@
 import sympy as sym
 
 class UniVarProblem:
-    """ A class to store univariate optimization problem instance """
+    """ Univariate problem
 
+    A class for storing information about a univariate optimization problem
+
+    Attributes:
+        name: name of a test problem
+        sym_objective: objective in sympy formal
+        objective: objective as python function
+        a: left interval end
+        b: right interval end
+        min_f: global minumum function's value
+        mins_x: global minimum points
+    """
     def __init__(self, name, objective, a, b, min_f, mins_x):
+        """ Constructor
+        Args:
+            name: name of a test example
+            objective: objective in sympy format
+            a: left end of a feasible interval
+            b: right end of a feasible interval
+            min_f: global minimum value
+            mins_x: global minimum (known) points
+        """
         self.name = name
         self.sym_objective = sym.sympify(objective)
         self.sym_df = self.sym_objective.diff()
