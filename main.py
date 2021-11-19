@@ -16,9 +16,10 @@ def read_problems(fname):
     data = pd.read_csv(fname, index_col = 'name', comment = '#')
     return data
 
-problems = read_problems("problems.csv")
+# problems = read_problems("problems.csv")
+problems = read_problems("/tmp/shek.csv")
 print(problems)
-name = 'shekel1'
+name = 'shekel_1'
 prob = uvpr.UniVarProblem(name, problems.loc[name,'objective'], problems.loc[name,'a'], problems.loc[name,'b'], problems.loc[name,'min_f'], problems.loc[name,'mins_x'].strip('][').split(', '))
 print(prob)
 
