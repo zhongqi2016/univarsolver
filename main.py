@@ -1,6 +1,7 @@
 import math
 import sympy as sym
 import pandas as pd
+import numpy as np
 import interval as ival
 import uvarprob as uvpr
 import bnb as bnb
@@ -21,9 +22,10 @@ problems = read_problems("/tmp/shek.csv")
 print(problems)
 name = 'shekel_1'
 prob = uvpr.UniVarProblem(name, problems.loc[name,'objective'], problems.loc[name,'a'], problems.loc[name,'b'], problems.loc[name,'min_f'], problems.loc[name,'mins_x'].strip('][').split(', '))
-print(prob)
+print("Parsed objective = ", problems.loc[name,'objective'])
+print("Parsed problem = ", prob)
 
-dp = ivproc.IntervalProcessor(prob.min_f, prob.mins_x[0], prob, 0.0001)
+dp = ivproc.IntervalProcessor(np.nan, np.nan, prob, 1e-4)
 
 sl = SortedKeyList(key = lambda s : s.level)
 sub = sub.Sub(0, 0, ival.Interval([prob.a, prob.b]))
