@@ -12,17 +12,17 @@ class UniVarProblem:
         a: left interval end
         b: right interval end
         min_f: global minumum function's value
-        mins_x: global minimum points
+        min_x: global minimum point
     """
-    def __init__(self, name, objective, a, b, min_f, mins_x):
+    def __init__(self, name, objective, a, b, min_f, min_x):
         """ Constructor
         Args:
             name: name of a test example
             objective: objective in sympy format
             a: left end of a feasible interval
             b: right end of a feasible interval
-            min_f: global minimum value
-            mins_x: global minimum (known) points
+            min_f: global minimum (best known) value
+            min_x: global minimum (best known) point
         """
         self.name = name
         self.sym_objective = sym.sympify(objective)
@@ -33,7 +33,7 @@ class UniVarProblem:
         self.a = a
         self.b = b
         self.min_f = min_f
-        self.mins_x = mins_x
+        self.min_x = min_x
 
     def __repr__(self):
-        return self.name + ": " + str(self.sym_objective) + " -> min, " + str(self.a) + " <= x <= " + str(self.b) + ", f* = " + str(self.min_f) + ", " + str(self.mins_x)
+        return self.name + ": " + str(self.sym_objective) + " -> min, " + str(self.a) + " <= x <= " + str(self.b) + ", f* = " + str(self.min_f) + ", x* = " + str(self.min_x)

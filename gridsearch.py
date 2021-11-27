@@ -1,4 +1,5 @@
 import numpy as np
+
 def grid_search(f, a, b, s):
     """
     Searches for a minimum on a uniform grid

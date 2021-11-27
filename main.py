@@ -21,7 +21,7 @@ def read_problems(fname):
 problems = read_problems("/tmp/shek.csv")
 print(problems)
 name = 'shekel_1'
-prob = uvpr.UniVarProblem(name, problems.loc[name,'objective'], problems.loc[name,'a'], problems.loc[name,'b'], problems.loc[name,'min_f'], problems.loc[name,'mins_x'].strip('][').split(', '))
+prob = uvpr.UniVarProblem(name, problems.loc[name,'objective'], problems.loc[name,'a'], problems.loc[name,'b'], problems.loc[name,'min_f'], problems.loc[name,'min_x'])
 print("Parsed objective = ", problems.loc[name,'objective'])
 print("Parsed problem = ", prob)
 
@@ -39,14 +39,6 @@ print(sl)
 
 true_min = gs.grid_search(prob.objective, prob.a, prob.b, 1e-3)
 print("Grid search:", true_min)
-prob.mins_x = [true_min[0]]
-prob.min_f = true_min[1]
-print("problem = ", prob)
-print("type = ", type(problems.loc[name,'mins_x']))
-print("type = ", type(prob.mins_x))
-problems.loc[name,'mins_x'] =  str([round(true_min[0], 5), 1.])
-problems.loc[name,'min_f'] = round(true_min[1], 5)
-problems.to_csv('/tmp/prob.csv')
 
 # while len(sl) > 0:
 #     print(sl.pop())
