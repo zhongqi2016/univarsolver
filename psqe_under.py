@@ -2,9 +2,9 @@
 
 
 
-class PSQE:
+class PSQE_Under:
     """
-    Piecewise quadratic estimators
+    Piecewise quadratic underestimator
     """
 
     def __init__(self, a, b, alp, bet, f, df):
@@ -35,7 +35,7 @@ class PSQE:
     def __repr__(self):
         return "Estimator " + "a = " + str(self.a) + ", b = " + str(self.b) + ", c = " + str(self.c) + ", d = " + str(self.d) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) + ", fa = " + str(self.fa) + ", fb = " + str(self.fb) + ", dfa = " + str(self.dfa) + ", dfb = " + str(self.dfb)
 
-    def underestimator(self, x):
+    def estimator(self, x):
         """
         The piecewise quadratic underestimator
         Args:
