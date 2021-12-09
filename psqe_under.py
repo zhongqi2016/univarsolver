@@ -26,6 +26,8 @@ class PSQE_Under:
         self.fb = f(b)
         self.dfa = df(a)
         self.dfb = df(b)
+        self.f = f
+        self.df = df
 
         delt = (self.dfb - self.dfa - alp * (b - a))/(bet - alp)
         print("delt = ", delt)
@@ -49,3 +51,48 @@ class PSQE_Under:
             return self.fa + self.dfa * (self.c - self.a) + 0.5 * self.alp * (self.c - self.a)**2 + (self.dfa + self.alp * (self.c - self.a))*(x - self.c) + 0.5 * self.bet * (x - self.c)**2
         else:
             return self.fb + self.dfb * (x - self.b) + 0.5 * self.alp * (x - self.b)**2
+
+    def estimators_derivative(self, x):
+        """
+        The piecewise linear underestimator's derivative
+        Args:
+            x: argument
+
+        Returns: underestimator's derivative value
+        """
+        if x < self.c:
+            return self.dfa + self.alp * (x - self.a)
+        elif x < self.d:
+            return self.dfa + self.alp * (self.c - self.a) + self.bet * (x - self.c)
+        else:
+            return self.dfb + self.alp * (x - self.b)
+
+    def lower_bound_and_point(self):
+        """
+        Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
+        """
+        x_list = [self.a, self.c, self.d, self.b]
+        df_list = [self.estimators_derivative(x) for x in x_list]
+        check_list = [self.a, self.b]
+        record = (None, None)
+        ln = len(x_list)
+        for i in range(ln - 1):
+            x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
+            if not (x is None):
+                check_list.append(x)
+        print(check_list)
+        for x in check_list:
+            v = self.estimator(x)
+            if record[1] is None or v < record[1]:
+                record = (x, v)
+        return record
+
+    def find_argmin(self, x1, df1, x2, df2):
+        if df1 == 0 and df2 == 0:
+            xs = 0.5 * (x1 + x2)
+        elif df1 <= 0 <= df2:
+            xs = x1 + (-df1) * (x2 - x1) / (df2 - df1)
+        else:
+            xs = None
+        return xs
+
