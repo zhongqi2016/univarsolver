@@ -15,8 +15,8 @@ class PSQE_Under:
             b: right interval end
             alp: lower end of the Lipschitzian interval
             bet: upper end of the Lipschitzian interval
-            f: objective function
-            df: objective function derivative
+            f: objective
+            df: objective's derivative
         """
         self.a = a
         self.b = b
@@ -30,7 +30,7 @@ class PSQE_Under:
         self.df = df
 
         delt = (self.dfb - self.dfa - alp * (b - a))/(bet - alp)
-        print("delt = ", delt)
+        # print("delt = ", delt)
         self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt**2 * (bet - alp) + alp * delt * (b - a) + 0.5 * alp * (a**2 - b**2) + self.fa - self.fb)/(delt * (bet - alp))
         self.d = self.c + delt
 
@@ -80,12 +80,18 @@ class PSQE_Under:
             x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
             if not (x is None):
                 check_list.append(x)
-        print(check_list)
+        # print(check_list)
         for x in check_list:
             v = self.estimator(x)
             if record[1] is None or v < record[1]:
                 record = (x, v)
         return record
+
+    def record_and_point(self):
+        """
+        Returns: Tuple (point c where the best value of objective is achieved (a or b), f(c))
+        """
+        return (self.a, self.fa) if self.fa <= self.fb else (self.b, self.fb)
 
     def find_argmin(self, x1, df1, x2, df2):
         if df1 == 0 and df2 == 0:

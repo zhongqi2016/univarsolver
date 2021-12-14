@@ -30,6 +30,8 @@ class UniVarProblem:
         self.sym_ddf = self.sym_df.diff()
         x = sym.symbols('x')
         self.objective = sym.lambdify(x, self.sym_objective)
+        self.df = sym.lambdify(x, self.sym_df)
+        self.ddf = sym.lambdify(x, self.sym_ddf)
         self.a = a
         self.b = b
         self.min_f = min_f
