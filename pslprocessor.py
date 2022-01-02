@@ -19,7 +19,7 @@ class PSLData:
 
 class PSLProcessor:
     """
-    The processor based on piece-wise underestimator
+    The processor based on piece-wise linear underestimator
     """
     def __init__(self, rec_v, rec_x, problem, eps, global_lipint = False, use_symm_lipint = False):
         """
