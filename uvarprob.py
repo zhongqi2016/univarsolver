@@ -13,8 +13,9 @@ class UniVarProblem:
         b: right interval end
         min_f: global minumum function's value
         min_x: global minimum point
+        logger: logging function
     """
-    def __init__(self, name, objective, a, b, min_f, min_x):
+    def __init__(self, name, objective, a, b, min_f, min_x, logger = lambda x : x):
         """ Constructor
         Args:
             name: name of a test example
@@ -29,7 +30,14 @@ class UniVarProblem:
         self.sym_df = self.sym_objective.diff()
         self.sym_ddf = self.sym_df.diff()
         x = sym.symbols('x')
-        self.objective = sym.lambdify(x, self.sym_objective)
+        obj_f = sym.lambdify(x, self.sym_objective)
+        def obj_log(x): 
+            logger(x)
+            return obj_f(x)
+        
+#         self.objective = sym.lambdify(x, self.sym_objective)
+#         self.objective = obj_f
+        self.objective = obj_log
         self.df = sym.lambdify(x, self.sym_df)
         self.ddf = sym.lambdify(x, self.sym_ddf)
         self.a = a
