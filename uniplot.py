@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-default_colormap = {'function' : 'b-'}
+max_num_series = 7
 
-def plot_problem(prob, colormap = default_colormap, npoints = 1000):
+default_graphic_tips = {'function' : 'b-', 'legend_colors' : ['r', 'g', 'brown', 'orange', 'b', 'b', 'b', 'b'], 'legend_markers' : ['o','o','o','o','o','o','o','o'], 'legend_sizes' : [1,1,1,1,1,1,1,1]}
+
+def plot_problem(prob, tips = default_graphic_tips, npoints = 1000, legend = 2):
     """
        Plots a problem
        
@@ -26,13 +28,18 @@ def plot_problem(prob, colormap = default_colormap, npoints = 1000):
     lb = np.amin(fta)
     ub = np.amax(fta)
     d = (ub - lb) * 0.1
-    plt.plot(ta, fta, colormap['function'])
-    plt.ylim([lb - d,ub + d])
+    plt.plot(ta, fta, tips['function'])
+    plt.ylim([lb - d - legend,ub + d])
 #     plt.show() 
 
     
 
-def plot_points(x, y, colormap = default_colormap):
-    plt.scatter(x, y, s = 0.01)
+def plot_points(x, y, num_series, tips = default_graphic_tips):
+    if num_series > max_num_series:
+        raise Exception('num_series is too large')
+    plt.scatter(x, y, c = tips['legend_colors'][num_series], linewidths = 1, marker = tips['legend_markers'][num_series], s = tips['legend_sizes'][num_series])
+#     plt.scatter(x, y, c = tips['legend_colors'][num_series], marker = tips['legend_markers'][num_series], s = 2)
+#     plt.scatter(x, y, c = tips['legend_colors'][num_series], marker = '+', s = 5)
+#     plt.scatter(x, y, c = 'r', marker=legend_markers[num_ser, linewidths = 1, s = 10)
     
     
