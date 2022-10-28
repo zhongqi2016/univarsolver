@@ -1,12 +1,12 @@
 # Piecewise smooth quadratic estimators
 
 
-class PSQE_Under:
+class PSQE_Bounds:
     """
     Piecewise quadratic underestimator
     """
 
-    def __init__(self, a, b, alp, bet, f, df):
+    def __init__(self, a, b, alp, bet, f, df, under):
         """
         The smooth piecewise quadratic estimator constiructor
         Args:
@@ -19,12 +19,21 @@ class PSQE_Under:
         """
         self.a = a
         self.b = b
-        self.alp = alp
-        self.bet = bet
-        self.fa = f(a)
-        self.fb = f(b)
-        self.dfa = df(a)
-        self.dfb = df(b)
+        self.under = under
+        if under:
+            self.alp = alp
+            self.bet = bet
+            self.fa = f(a)
+            self.fb = f(b)
+            self.dfa = df(a)
+            self.dfb = df(b)
+        else:
+            self.alp = -bet
+            self.bet = -alp
+            self.fa = -f(a)
+            self.fb = -f(b)
+            self.dfa = -df(a)
+            self.dfb = -df(b)
         self.f = f
         self.df = df
 
@@ -55,7 +64,7 @@ class PSQE_Under:
         else:
             return self.fb + self.dfb * (x - self.b) + 0.5 * self.alp * (x - self.b) ** 2
 
-    def nestimator(self,x):
+    def nestimator(self, x):
         return -self.estimator(x)
 
     def estimators_derivative(self, x):
@@ -80,7 +89,8 @@ class PSQE_Under:
         x_list = [self.a, self.c, self.d, self.b]
         df_list = [self.estimators_derivative(x) for x in x_list]
         check_list = [self.a, self.b]
-        record = (None, None)
+        record_x = None
+        record_v = None
         ln = len(x_list)
         for i in range(ln - 1):
             x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
@@ -89,9 +99,12 @@ class PSQE_Under:
         # print(check_list)
         for x in check_list:
             v = self.estimator(x)
-            if record[1] is None or v < record[1]:
-                record = (x, v)
-        return record
+            if record_v is None or v < record_v:
+                record_v = v
+                record_x = x
+        if not self.under:
+            record_v = -record_v
+        return record_x, record_v
 
     def record_and_point(self):
         """

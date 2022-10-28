@@ -1,5 +1,6 @@
 import sympy as sym
 
+
 class UniVarProblem:
     """ Univariate problem
 
@@ -27,9 +28,12 @@ class UniVarProblem:
         """
         self.name = name
         self.sym_objective = sym.sympify(objective)
+        x = sym.symbols('x')
+        if self.sym_objective.subs(x, a) < 0:
+            self.sym_objective = -self.sym_objective
+
         self.sym_df = self.sym_objective.diff()
         self.sym_ddf = self.sym_df.diff()
-        x = sym.symbols('x')
         obj_f = sym.lambdify(x, self.sym_objective)
         def obj_log(x): 
             logger(x)
@@ -46,4 +50,5 @@ class UniVarProblem:
         self.min_x = min_x
 
     def __repr__(self):
-        return self.name + ": " + str(self.sym_objective) + " -> min, " + str(self.a) + " <= x <= " + str(self.b) + ", f* = " + str(self.min_f) + ", x* = " + str(self.min_x)
+        return self.name + ": " + str(self.sym_objective) + " -> min, " + str(self.a) + " <= x <= " + str(
+            self.b) + ", f* = " + str(self.min_f) + ", x* = " + str(self.min_x)

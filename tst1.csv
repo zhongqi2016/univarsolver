@@ -1,0 +1,5 @@
+name,objective,a,b,min_f,min_x
+benchmark,x^3-10,-4,4,0,0
+benchmark2,x^3+2*x-10,-5,5,0,0
+
+
