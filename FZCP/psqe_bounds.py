@@ -16,6 +16,7 @@ class PSQE_Bounds:
             bet: upper end of the Lipschitzian interval for derivative
             f: objective
             df: objective's derivative
+            under: if True compute the under bound
         """
         self.a = a
         self.b = b

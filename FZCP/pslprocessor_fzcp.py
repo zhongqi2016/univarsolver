@@ -1,11 +1,11 @@
 import sub as sb
 import interval as ival
-import psqe_bounds as fps
+import psl_bounds as ps
 
 
-class PSQEData:
+class PSLData:
     """
-    The subproblem data used on PSQE subproblems
+    The subproblem data used on PSL subproblems
     """
 
     def __init__(self, ival, split_point):
@@ -19,9 +19,9 @@ class PSQEData:
         self.split_point = split_point
 
 
-class PSQEProcessor_FZCP:
+class PSLProcessor:
     """
-    The processor based on piece-wise underestimator
+    The processor based on piece-wise linear underestimator
     """
 
     def __init__(self, rec_v, rec_x, problem, eps, global_lipint=False, use_symm_lipint=False):
@@ -42,22 +42,17 @@ class PSQEProcessor_FZCP:
         self.rec_x = rec_x
         self.problem = problem
         self.eps = eps
-        self.ddi = problem.ddf(ival.Interval([problem.a, problem.b]))
+        self.di = problem.df(ival.Interval([problem.a, problem.b]))
 
     def compute_bounds(self, sub, under):
-        """
-        Args:
-            under: if True compute the under bound
-        """
         if self.global_lipint:
-            ddi = self.ddi
+            di = self.di
         else:
-            ddi = self.problem.ddf(sub.data.ival)
+            di = self.problem.df(sub.data.ival)
         if self.use_symm_lipint:
-            L = max(-self.ddi.x[0], self.ddi.x[1])
-            ddi = ival.Interval([-L, L])
-        return fps.PSQE_Bounds(sub.data.ival[0], sub.data.ival[1], ddi[0], ddi[1], self.problem.objective,
-                               self.problem.df, under)
+            L = max(-di[0], di[1])
+            di = ival.Interval([-L, L])
+        return ps.PSL_Bounds(sub.data.ival[0], sub.data.ival[1], di[0], di[1], self.problem.objective, under)
 
     def updateSplitAndBounds(self, sub):
         psqe_upper = self.compute_bounds(sub, False)
@@ -82,10 +77,10 @@ class PSQEProcessor_FZCP:
                 self.res_list.append(sub.data.split_point)
             else:
                 sub_1 = sb.Sub(sub.level + 1, [0, 0],
-                               PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
+                               PSLData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
                 self.updateSplitAndBounds(sub_1)
                 sub_2 = sb.Sub(sub.level + 1, [0, 0],
-                               PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
+                               PSLData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
                 self.updateSplitAndBounds(sub_2)
                 lst.append(sub_2)
                 if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
