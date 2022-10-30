@@ -17,7 +17,6 @@ class PSQEData:
         """
         self.ival = ival
         self.split_point = split_point
-        self.upperOfB = None
 
 
 class PSQEProcessor_FZCP:
@@ -59,8 +58,6 @@ class PSQEProcessor_FZCP:
     def updateSplitAndBounds(self, sub):
         psqe_upper = self.compute_bounds(sub, False)
         max_x, sub.bound[1] = psqe_upper.lower_bound_and_point()
-        # ???
-        sub.data.upperOfB = -psqe_upper.estimator(sub.data.ival[1])
         min_x, sub.bound[0] = self.compute_bounds(sub, True).lower_bound_and_point()
         widthX = sub.data.ival[1] - sub.data.ival[0]
         widthF = sub.bound[1] - sub.bound[0]
