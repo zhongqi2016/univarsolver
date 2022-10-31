@@ -7,7 +7,7 @@ from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import sys
 
-TestResult = namedtuple('TestResult', ['nsteps', 'record_value'])
+TestResult = namedtuple('TestResult', ['nsteps', 'first_crossing_zero_point'])
 
 
 def get_initial_recval(prob, known_record):
@@ -26,7 +26,7 @@ def psl(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_in
     sl.add(subp)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
-    return TestResult(nsteps=steps, record_value=psp.res_list)
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list)
 
 
 def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):
@@ -39,4 +39,4 @@ def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_i
     sl.add(subp)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
-    return TestResult(nsteps=steps, record_value=psp.res_list[0])
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
