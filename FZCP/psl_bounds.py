@@ -22,6 +22,7 @@ class PSL_Bounds:
         self.a = a
         self.b = b
         self.f = f
+        self.under = under
         if under:
             self.alp = alp
             self.bet = bet
@@ -49,9 +50,13 @@ class PSL_Bounds:
         Returns: underestimator's value
         """
         if x <= self.c:
-            return self.fa + self.alp * (x - self.a)
+            res = self.fa + self.alp * (x - self.a)
         else:
-            return self.fb + self.bet * (x - self.b)
+            res = self.fb + self.bet * (x - self.b)
+        if self.under:
+            return res
+        else:
+            return -res
 
     def nestimator(self, x):
         return -self.estimator(x)
@@ -60,13 +65,19 @@ class PSL_Bounds:
         """
         Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
         """
+        record_x = None
+        record_v = None
         if self.alp >= 0:
-            record = (self.a, self.fa)
+            record_x = self.a
+            record_v = self.fa
         elif self.bet <= 0:
-            record = (self.b, self.fb)
+            record_x = self.b
+            record_v = self.fb
         else:
-            record = (self.c, self.estimator(self.c))
-        return record
+            record_x = self.c
+            record_v = self.estimator(self.c)
+
+        return record_x, record_v
 
     def record_and_point(self):
         """
