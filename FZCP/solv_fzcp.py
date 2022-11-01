@@ -1,11 +1,14 @@
+import sys
+from sortedcontainers import SortedKeyList
+from collections import namedtuple
 import psqeprocessor_fzcp as psqproc
 import pslprocessor_fzcp as pslproc
+
+sys.path.append("..")
 import interval as ival
 import bnb as bnb
 import sub as sub
-from sortedcontainers import SortedKeyList
-from collections import namedtuple
-import sys
+
 
 TestResult = namedtuple('TestResult', ['nsteps', 'first_crossing_zero_point'])
 
