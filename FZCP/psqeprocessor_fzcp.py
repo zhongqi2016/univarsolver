@@ -1,5 +1,6 @@
 import psqe_bounds as fps
 import sys
+
 sys.path.append("..")
 import sub as sb
 import interval as ival
@@ -68,12 +69,16 @@ class PSQEProcessor_FZCP:
         widthX = sub.data.ival[1] - sub.data.ival[0]
         widthF = sub.bound[1] - sub.bound[0]
         beta = sub.bound[1] / widthF
-        if beta <= 0.33:
+        if beta < 0.33:
             sub.data.split_point = sub.data.ival[0] + 0.33 * widthX
-        elif beta <= 0.66:
+        elif beta < 0.66:
             sub.data.split_point = sub.data.ival[0] + beta * widthX
         else:
             sub.data.split_point = sub.data.ival[0] + 0.66 * widthX
+            # if sub.bound[1] - self.problem.objective(sub.data.ival[1]) <= self.problem.objective(sub.data.ival[1]) - \
+            #         sub.bound[0]:
+            #     beta = 1 - beta
+
 
     def fzcp_process(self, sub):
         lst = []

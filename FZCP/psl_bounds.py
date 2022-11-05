@@ -53,10 +53,8 @@ class PSL_Bounds:
             res = self.fa + self.alp * (x - self.a)
         else:
             res = self.fb + self.bet * (x - self.b)
-        if self.under:
-            return res
-        else:
-            return -res
+        return res
+
 
     def nestimator(self, x):
         return -self.estimator(x)
@@ -76,7 +74,8 @@ class PSL_Bounds:
         else:
             record_x = self.c
             record_v = self.estimator(self.c)
-
+        if self.under == False:
+            record_v = -record_v
         return record_x, record_v
 
     def record_and_point(self):

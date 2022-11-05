@@ -18,6 +18,7 @@ def bnb(subs, max_steps, processor):
         steps = steps + 1
     return steps
 
+
 def bnb_fzcp(subs, max_steps, processor):
     """
     Main Branch-and-Bound driver

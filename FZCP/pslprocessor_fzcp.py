@@ -54,6 +54,7 @@ class PSLProcessor:
         if self.use_symm_lipint:
             L = max(-di[0], di[1])
             di = ival.Interval([-L, L])
+
         return ps.PSL_Bounds(sub.data.ival[0], sub.data.ival[1], di[0], di[1], self.problem.objective, under)
 
     def updateSplitAndBounds(self, sub):

@@ -29,7 +29,7 @@ def psl(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_in
     sl.add(subp)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
-    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list)
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
 
 
 def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):
