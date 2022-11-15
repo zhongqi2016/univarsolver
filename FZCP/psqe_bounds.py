@@ -121,3 +121,38 @@ class PSQE_Bounds:
         else:
             xs = None
         return xs
+
+    def right_root_first(self):
+        # print("first right")
+        return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+
+    def right_root_third(self):
+        # print("third right")
+        return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+
+    def left_root_second(self):
+        # print("second left")
+        c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
+        b = self.dfa + self.alp * (self.c - self.a)
+        res = self.c + (-b - (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        return res
+
+    def getNewTrialPoint(self):
+        if self.estimator(self.c) <= 0:
+            new_point = self.right_root_first()
+        else:
+            est_der_c = self.estimators_derivative(self.c)
+            est_der_d = self.estimators_derivative(self.d)
+            if (est_der_c > 0 and est_der_d < 0) or (est_der_c < 0 and est_der_d > 0):
+                min_cd = self.find_argmin(self.c, self.estimators_derivative(self.c), self.d,
+                                          self.estimators_derivative(self.d))
+                if min_cd > 0:
+                    new_point = self.right_root_third()
+                else:
+                    new_point = self.left_root_second()
+            else:
+                if self.estimator(self.d) > 0:
+                    new_point = self.right_root_third()
+                else:
+                    new_point = self.left_root_second()
+        return new_point

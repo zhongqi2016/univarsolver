@@ -79,7 +79,6 @@ class PSQEProcessor_FZCP:
             #         sub.bound[0]:
             #     beta = 1 - beta
 
-
     def fzcp_process(self, sub):
         lst = []
         obj = self.problem.objective
@@ -90,12 +89,29 @@ class PSQEProcessor_FZCP:
             else:
                 sub_1 = sb.Sub(sub.level + 1, [0, 0],
                                PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
-                self.updateSplitAndBounds(sub_1)
+
                 sub_2 = sb.Sub(sub.level + 1, [0, 0],
                                PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
-                self.updateSplitAndBounds(sub_2)
-                lst.append(sub_2)
-                if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
-                    self.rec_x = sub_1.data.ival[1]
-                lst.append(sub_1)
+
+                if self.updateSplitAndBounds2(sub_2):
+                    lst.append(sub_2)
+
+                if self.updateSplitAndBounds2(sub_1):
+                    if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
+                        self.rec_x = sub_1.data.ival[1]
+                    lst.append(sub_1)
         return lst
+
+    def updateSplitAndBounds2(self, sub):
+        psqe_upper = self.compute_bounds(sub, False)
+        max_x, sub.bound[1] = psqe_upper.lower_bound_and_point()
+        psqe_under = self.compute_bounds(sub, True)
+        min_x, sub.bound[0] = psqe_under.lower_bound_and_point()
+        if sub.bound[0] <= 0 <= sub.bound[1]:
+            sub.data.split_point = psqe_under.getNewTrialPoint()
+            # print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
+            if sub.data.split_point > sub.data.ival.x[1] or sub.data.split_point < sub.data.ival.x[0]:
+                print("error, [", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
+                return False
+            return True
+        return False

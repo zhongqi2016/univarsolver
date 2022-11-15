@@ -38,7 +38,7 @@ def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_i
                                      global_lipint=global_lipschitz_interval, use_symm_lipint=sym)
     sl = SortedKeyList(key=lambda s: s.level)
     subp = sub.Sub(0, [0, 0], psqproc.PSQEData(ival.Interval([prob.a, prob.b]), 0))
-    psp.updateSplitAndBounds(subp)
+    psp.updateSplitAndBounds2(subp)
     sl.add(subp)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
