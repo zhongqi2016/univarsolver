@@ -93,13 +93,13 @@ class PSQEProcessor_FZCP:
                 sub_2 = sb.Sub(sub.level + 1, [0, 0],
                                PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
 
-                if self.updateSplitAndBounds2(sub_2):
-                    lst.append(sub_2)
+                self.updateSplitAndBounds(sub_2)
+                lst.append(sub_2)
 
-                if self.updateSplitAndBounds2(sub_1):
-                    if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
-                        self.rec_x = sub_1.data.ival[1]
-                    lst.append(sub_1)
+                self.updateSplitAndBounds(sub_1)
+                if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
+                    self.rec_x = sub_1.data.ival[1]
+                lst.append(sub_1)
         return lst
 
     def updateSplitAndBounds2(self, sub):
@@ -109,7 +109,7 @@ class PSQEProcessor_FZCP:
         min_x, sub.bound[0] = psqe_under.lower_bound_and_point()
         if sub.bound[0] <= 0 <= sub.bound[1]:
             sub.data.split_point = psqe_under.getNewTrialPoint()
-            # print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
+            print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
             if sub.data.split_point > sub.data.ival.x[1] or sub.data.split_point < sub.data.ival.x[0]:
                 print("error, [", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
                 return False
