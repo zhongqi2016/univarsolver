@@ -153,6 +153,7 @@ class PSQE_Bounds:
             else:
                 if self.estimator(self.d) > 0:
                     new_point = self.right_root_third()
+
                 else:
                     new_point = self.left_root_second()
         return new_point

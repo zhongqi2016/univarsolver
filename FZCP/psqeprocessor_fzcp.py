@@ -82,7 +82,6 @@ class PSQEProcessor_FZCP:
     def fzcp_process(self, sub):
         lst = []
         obj = self.problem.objective
-        obj(1)
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
             if abs(obj(sub.data.split_point)) < self.eps:
                 self.res_list.append(sub.data.split_point)
@@ -93,14 +92,18 @@ class PSQEProcessor_FZCP:
                 sub_2 = sb.Sub(sub.level + 1, [0, 0],
                                PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
 
-                if self.updateSplitAndBounds2(sub_2):
-                    lst.append(sub_2)
+                self.updateSplitAndBounds(sub_2)
+                lst.append(sub_2)
 
-                if self.updateSplitAndBounds2(sub_1):
-                    if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
-                        self.rec_x = sub_1.data.ival[1]
-                    lst.append(sub_1)
+                self.updateSplitAndBounds(sub_1)
+                if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
+                    self.rec_x = sub_1.data.ival[1]
+                lst.append(sub_1)
         return lst
+
+    def serg_process(self, sub):
+        psqe_under = self.compute_bounds(sub, True)
+
 
     def updateSplitAndBounds2(self, sub):
         psqe_upper = self.compute_bounds(sub, False)
