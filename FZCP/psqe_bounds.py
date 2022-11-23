@@ -144,8 +144,8 @@ class PSQE_Bounds:
             est_der_c = self.estimators_derivative(self.c)
             est_der_d = self.estimators_derivative(self.d)
             if (est_der_c > 0 and est_der_d < 0) or (est_der_c < 0 and est_der_d > 0):
-                min_cd = self.find_argmin(self.c, self.estimators_derivative(self.c), self.d,
-                                          self.estimators_derivative(self.d))
+                min_cd = self.estimator(self.find_argmin(self.c, self.estimators_derivative(self.c), self.d,
+                                          self.estimators_derivative(self.d)))
                 if min_cd > 0:
                     new_point = self.right_root_third()
                 else:
@@ -153,6 +153,7 @@ class PSQE_Bounds:
             else:
                 if self.estimator(self.d) > 0:
                     new_point = self.right_root_third()
+
                 else:
                     new_point = self.left_root_second()
         return new_point

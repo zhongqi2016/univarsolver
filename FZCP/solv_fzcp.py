@@ -9,7 +9,6 @@ import interval as ival
 import bnb as bnb
 import sub as sub
 
-
 TestResult = namedtuple('TestResult', ['nsteps', 'first_crossing_zero_point'])
 
 
@@ -43,3 +42,20 @@ def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_i
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
     return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
+
+
+def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):
+    psp = psqproc.PSQEProcessor_FZCP(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
+                                     eps=epsilon,
+                                     global_lipint=global_lipschitz_interval, use_symm_lipint=sym)
+    # sl = SortedKeyList(key=lambda s: s.level)
+    subp = sub.Sub(0, [0, 0], psqproc.PSQEData(ival.Interval([prob.a, prob.b]), 0))
+    steps = 0
+    obj = psp.problem.objective
+    while steps <= max_steps:
+        psp.updateSplitAndBounds2(subp)
+        subp.data.ival.x[0] = subp.data.split_point
+        steps = steps + 1
+        if abs(obj(subp.data.split_point)) < epsilon:
+            break
+    return TestResult(nsteps=steps, first_crossing_zero_point=subp.data.ival.x[0])
