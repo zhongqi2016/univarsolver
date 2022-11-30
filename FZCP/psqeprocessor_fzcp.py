@@ -101,17 +101,16 @@ class PSQEProcessor_FZCP:
                 lst.append(sub_1)
         return lst
 
-
-    def updateSplitAndBounds2(self, sub):
+    def update_interval(self, sub):
         psqe_upper = self.compute_bounds(sub, False)
         max_x, sub.bound[1] = psqe_upper.lower_bound_and_point()
         psqe_under = self.compute_bounds(sub, True)
         min_x, sub.bound[0] = psqe_under.lower_bound_and_point()
         if sub.bound[0] <= 0 <= sub.bound[1]:
-            sub.data.split_point = psqe_under.getNewTrialPoint()
+            left_end = psqe_under.getNewTrialPoint()
+            right_end = psqe_upper.getNewTrialPoint()
+            sub.data.ival.x[0] = left_end
+            if right_end < sub.data.ival.x[1]:
+                sub.data.ival.x[1] = right_end
             # print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
-            if sub.data.split_point > sub.data.ival.x[1] or sub.data.split_point < sub.data.ival.x[0]:
-                print("error, [", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
-                return False
-            return True
-        return False
+

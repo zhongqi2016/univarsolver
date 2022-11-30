@@ -53,9 +53,8 @@ def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschit
     steps = 0
     obj = psp.problem.objective
     while steps <= max_steps:
-        psp.updateSplitAndBounds2(subp)
-        subp.data.ival.x[0] = subp.data.split_point
+        psp.update_interval(subp)
         steps = steps + 1
-        if abs(obj(subp.data.split_point)) < epsilon:
+        if subp.data.ival.x[1]-subp.data.ival.x[0] < epsilon:
             break
     return TestResult(nsteps=steps, first_crossing_zero_point=subp.data.ival.x[0])

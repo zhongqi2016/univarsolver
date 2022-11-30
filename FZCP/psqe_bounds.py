@@ -122,13 +122,79 @@ class PSQE_Bounds:
             xs = None
         return xs
 
+    def find_min_under_zero(self, x1, df1, x2, df2):
+        if df1 > 0 and df2 > 0:
+            if self.estimator(x1) <= 0:
+                return True
+            else:
+                return False
+        elif df1 < 0 and df2 < 0:
+            if self.estimator(x2) <= 0:
+                return True
+            else:
+                return False
+        elif df1 < 0:
+            if self.estimator(x1 + (-df1) * (x2 - x1) / (df2 - df1)) <= 0:
+                return True
+            else:
+                return False
+        else:
+            if self.estimator(x1) <= 0:
+                return True
+            else:
+                if self.estimator(x2) <= 0:
+                    return True
+                else:
+                    return False
+
+    def find_max_above_zero(self, x1, df1, x2, df2):
+        if df1 > 0 and df2 > 0:
+            if self.estimator(x2) >= 0:
+                return True
+            else:
+                return False
+        elif df1 < 0 and df2 < 0:
+            if self.estimator(x1) >= 0:
+                return True
+            else:
+                return False
+        elif df1 > 0:
+            max_x = x1 + (-df1) * (x2 - x1) / (df2 - df1)
+            if self.estimator(max_x) >= 0:
+                return True
+            else:
+                return False
+        else:
+            if self.estimator(x1) >= 0:
+                return True
+            else:
+                if self.estimator(x2) >= 0:
+                    return True
+                else:
+                    return False
+
     def right_root_first(self):
         # print("first right")
         return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
 
+    def left_root_first(self):
+        # print("first left")
+        return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+
     def right_root_third(self):
         # print("third right")
         return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+
+    def left_root_third(self):
+        # print("third left")
+        return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+
+    def right_root_second(self):
+        # print("second right")
+        c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
+        b = self.dfa + self.alp * (self.c - self.a)
+        res = self.c + (-b + (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        return res
 
     def left_root_second(self):
         # print("second left")
@@ -138,22 +204,42 @@ class PSQE_Bounds:
         return res
 
     def getNewTrialPoint(self):
+        if self.under:
+            return self.get_trial_point_under()
+        else:
+            return self.get_trial_point_upper()
+
+    def get_trial_point_under(self):
         if self.estimator(self.c) <= 0:
             new_point = self.right_root_first()
         else:
             est_der_c = self.estimators_derivative(self.c)
             est_der_d = self.estimators_derivative(self.d)
             if (est_der_c > 0 and est_der_d < 0) or (est_der_c < 0 and est_der_d > 0):
-                min_cd = self.estimator(self.find_argmin(self.c, self.estimators_derivative(self.c), self.d,
-                                                         self.estimators_derivative(self.d)))
-                if min_cd > 0:
-                    new_point = self.right_root_third()
-                else:
+                if self.find_min_under_zero(self.c, est_der_c, self.d, est_der_d):
                     new_point = self.left_root_second()
+                else:
+                    new_point = self.right_root_third()
             else:
                 if self.estimator(self.d) > 0:
                     new_point = self.right_root_third()
-
                 else:
                     new_point = self.left_root_second()
+        return new_point
+
+    def get_trial_point_upper(self):
+        est_der_a = self.estimators_derivative(self.a)
+        est_der_c = self.estimators_derivative(self.c)
+        if self.find_max_above_zero(self.a, est_der_a, self.c, est_der_c):
+            new_point = self.left_root_first()
+        else:
+            if self.estimator(self.d) >= 0:
+                new_point = self.right_root_second()
+            else:
+                est_der_d = self.estimators_derivative(self.d)
+                est_der_b = self.estimators_derivative(self.b)
+                if self.find_max_above_zero(self.d, est_der_d, self.b, est_der_b):
+                    new_point = self.left_root_third()
+                else:
+                    new_point = self.b
         return new_point
