@@ -175,32 +175,50 @@ class PSQE_Bounds:
 
     def right_root_first(self):
         # print("first right")
-        return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+        if self.alp < 0:
+            return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+        else:
+            return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
 
     def left_root_first(self):
         # print("first left")
-        return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+        if self.alp < 0:
+            return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
+        else:
+            return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
 
     def right_root_third(self):
         # print("third right")
-        return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+        if self.alp < 0:
+            return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+        else:
+            return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
 
     def left_root_third(self):
         # print("third left")
-        return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+        if self.alp < 0:
+            return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
+        else:
+            return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
 
     def right_root_second(self):
         # print("second right")
         c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
         b = self.dfa + self.alp * (self.c - self.a)
-        res = self.c + (-b + (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        if self.bet>0:
+            res = self.c + (-b + (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        else:
+            res = self.c + (-b - (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
         return res
 
     def left_root_second(self):
         # print("second left")
         c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
         b = self.dfa + self.alp * (self.c - self.a)
-        res = self.c + (-b - (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        if self.bet > 0:
+            res = self.c + (-b - (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
+        else:
+            res = self.c + (-b + (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
         return res
 
     def getNewTrialPoint(self):
