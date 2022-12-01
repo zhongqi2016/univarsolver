@@ -3,6 +3,7 @@ from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import psqeprocessor_fzcp as psqproc
 import pslprocessor_fzcp as pslproc
+import processor_bnb_serg as sergproc
 
 sys.path.append("..")
 import interval as ival
@@ -55,6 +56,19 @@ def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschit
     while steps <= max_steps:
         psp.update_interval(subp)
         steps = steps + 1
-        if subp.data.ival.x[1]-subp.data.ival.x[0] < epsilon:
+        if subp.data.ival.x[1] - subp.data.ival.x[0] < epsilon:
             break
     return TestResult(nsteps=steps, first_crossing_zero_point=subp.data.ival.x[0])
+
+
+def method_serg_bnb(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):
+    psp = sergproc.ProcessorBNBSerg(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
+                                    eps=epsilon,
+                                    global_lipint=global_lipschitz_interval, use_symm_lipint=sym)
+    sl = SortedKeyList(key=lambda s: s.level)
+    subp = sub.Sub(0, [0, 0], psqproc.PSQEData(ival.Interval([prob.a, prob.b]), 0))
+    psp.update_interval(subp)
+    sl.add(subp)
+    cnt = max_steps
+    steps = bnb.bnb_fzcp(sl, cnt, psp)
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
