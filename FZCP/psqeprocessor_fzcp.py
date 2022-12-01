@@ -75,29 +75,25 @@ class PSQEProcessor_FZCP:
             sub.data.split_point = sub.data.ival[0] + beta * widthX
         else:
             sub.data.split_point = sub.data.ival[0] + 0.66 * widthX
-            # if sub.bound[1] - self.problem.objective(sub.data.ival[1]) <= self.problem.objective(sub.data.ival[1]) - \
-            #         sub.bound[0]:
-            #     beta = 1 - beta
 
     def fzcp_process(self, sub):
         lst = []
         obj = self.problem.objective
-        if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
-            if abs(obj(sub.data.split_point)) < self.eps:
+        if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival.x[0] < self.rec_x:
+            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
                 self.res_list.append(sub.data.split_point)
             else:
                 sub_1 = sb.Sub(sub.level + 1, [0, 0],
                                PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
-
-                sub_2 = sb.Sub(sub.level + 1, [0, 0],
-                               PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
-
-                self.updateSplitAndBounds(sub_2)
-                lst.append(sub_2)
-
                 self.updateSplitAndBounds(sub_1)
                 if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
                     self.rec_x = sub_1.data.ival[1]
+                else:
+                    sub_2 = sb.Sub(sub.level + 1, [0, 0],
+                                   PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
+
+                    self.updateSplitAndBounds(sub_2)
+                    lst.append(sub_2)
                 lst.append(sub_1)
         return lst
 
@@ -113,4 +109,3 @@ class PSQEProcessor_FZCP:
             if right_end < sub.data.ival.x[1]:
                 sub.data.ival.x[1] = right_end
             # print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
-

@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("..")
 import sub as sb
 import interval as ival
@@ -76,7 +77,7 @@ class PSLProcessor:
         obj = self.problem.objective
         obj(1)
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
-            if abs(obj(sub.data.split_point)) < self.eps:
+            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
                 self.res_list.append(sub.data.split_point)
             else:
                 sub_1 = sb.Sub(sub.level + 1, [0, 0],

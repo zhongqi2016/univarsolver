@@ -205,7 +205,7 @@ class PSQE_Bounds:
         # print("second right")
         c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
         b = self.dfa + self.alp * (self.c - self.a)
-        if self.bet>0:
+        if self.bet > 0:
             res = self.c + (-b + (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
         else:
             res = self.c + (-b - (b ** 2 - 2 * self.bet * c) ** 0.5) / self.bet
