@@ -60,10 +60,14 @@ class ProcessorBNBSerg:
                                self.problem.df, under)
 
     def fzcp_process(self, sub):
+        """
+        Process of branching
+        """
         lst = []
         obj = self.problem.objective
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
             if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
+                # If width of the interval satisfies the precision requirement
                 self.res_list.append(sub.data.split_point)
             else:
                 sub_1 = sb.Sub(sub.level + 1, [0, 0],
@@ -83,6 +87,9 @@ class ProcessorBNBSerg:
         return lst
 
     def update_interval(self, sub):
+        """
+        Narrow the interval by the zeros of the upper and under bounds
+        """
         psqe_upper = self.compute_bounds(sub, False)
         max_x, sub.bound[1] = psqe_upper.lower_bound_and_point()
         psqe_under = self.compute_bounds(sub, True)
