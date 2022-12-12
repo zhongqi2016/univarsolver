@@ -148,6 +148,9 @@ class PSQE_Bounds:
                     return False
 
     def find_max_above_zero(self, x1, df1, x2, df2):
+        """
+            Return True if the maximum value of f(x)>0 (x in [x1,x2]), otherwise return False
+        """
         if df1 > 0 and df2 > 0:
             if self.estimator(x2) >= 0:
                 return True
@@ -174,6 +177,9 @@ class PSQE_Bounds:
                     return False
 
     def right_root_first(self):
+        """
+        right root of the first row of the estimate equation
+        """
         # print("first right")
         if self.alp < 0:
             return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
@@ -181,6 +187,9 @@ class PSQE_Bounds:
             return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
 
     def left_root_first(self):
+        """
+        left root of the first row of the estimate equation
+        """
         # print("first left")
         if self.alp < 0:
             return self.a + (-self.dfa + (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
@@ -188,6 +197,9 @@ class PSQE_Bounds:
             return self.a + (-self.dfa - (self.dfa ** 2 - 2 * self.alp * self.fa) ** 0.5) / self.alp
 
     def right_root_third(self):
+        """
+        right root of the third row of the estimate equation
+        """
         # print("third right")
         if self.alp < 0:
             return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
@@ -195,6 +207,9 @@ class PSQE_Bounds:
             return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
 
     def left_root_third(self):
+        """
+        left root of the third row of the estimate equation
+        """
         # print("third left")
         if self.alp < 0:
             return self.b + (-self.dfb + (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
@@ -202,6 +217,9 @@ class PSQE_Bounds:
             return self.b + (-self.dfb - (self.dfb ** 2 - 2 * self.alp * self.fb) ** 0.5) / self.alp
 
     def right_root_second(self):
+        """
+        right root of the second row of the estimate equation
+        """
         # print("second right")
         c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
         b = self.dfa + self.alp * (self.c - self.a)
@@ -212,6 +230,9 @@ class PSQE_Bounds:
         return res
 
     def left_root_second(self):
+        """
+        left root of the second row of the estimate equation
+        """
         # print("second left")
         c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
         b = self.dfa + self.alp * (self.c - self.a)
@@ -228,6 +249,9 @@ class PSQE_Bounds:
             return self.get_trial_point_upper()
 
     def get_trial_point_under(self):
+        """
+        Get trial point (zero point of underestimate)
+        """
         if self.estimator(self.c) <= 0:
             new_point = self.right_root_first()
         else:
@@ -246,6 +270,9 @@ class PSQE_Bounds:
         return new_point
 
     def get_trial_point_upper(self):
+        """
+        Get trial point (zero point of upper estimate)
+        """
         est_der_a = self.estimators_derivative(self.a)
         est_der_c = self.estimators_derivative(self.c)
         if self.find_max_above_zero(self.a, est_der_a, self.c, est_der_c):

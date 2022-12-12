@@ -77,27 +77,33 @@ class PSQEProcessor_FZCP:
             sub.data.split_point = sub.data.ival[0] + 0.66 * widthX
 
     def fzcp_process(self, sub):
+        """
+        Process of branching
+        """
         lst = []
         obj = self.problem.objective
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival.x[0] < self.rec_x:
             if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
+                # If width of the interval satisfies the precision requirement
                 self.res_list.append(sub.data.split_point)
             else:
-                sub_1 = sb.Sub(sub.level + 1, [0, 0],
-                               PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
-                self.updateSplitAndBounds(sub_1)
-                if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
-                    self.rec_x = sub_1.data.ival[1]
+                sub_left = sb.Sub(sub.level + 1, [0, 0],
+                                  PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
+                self.updateSplitAndBounds(sub_left)
+                if obj(sub_left.data.ival[1]) <= 0 and sub_left.data.ival[1] < self.rec_x:
+                    self.rec_x = sub_left.data.ival[1]
                 else:
-                    sub_2 = sb.Sub(sub.level + 1, [0, 0],
-                                   PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
-
-                    self.updateSplitAndBounds(sub_2)
-                    lst.append(sub_2)
-                lst.append(sub_1)
+                    sub_right = sb.Sub(sub.level + 1, [0, 0],
+                                       PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
+                    self.updateSplitAndBounds(sub_right)
+                    lst.append(sub_right)
+                lst.append(sub_left)
         return lst
 
     def update_interval(self, sub):
+        """
+        Narrow the interval by the zeros of the upper and under bounds
+        """
         psqe_upper = self.compute_bounds(sub, False)
         max_x, sub.bound[1] = psqe_upper.lower_bound_and_point()
         psqe_under = self.compute_bounds(sub, True)
