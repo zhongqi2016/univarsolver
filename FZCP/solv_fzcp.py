@@ -3,7 +3,7 @@ from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import psqeprocessor_fzcp as psqproc
 import pslprocessor_fzcp as pslproc
-import processor_bnb_serg as sergproc
+import processor_new as sergproc
 
 sys.path.append("..")
 import interval as ival
@@ -61,10 +61,11 @@ def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschit
     return TestResult(nsteps=steps, first_crossing_zero_point=subp.data.ival.x[0])
 
 
-def method_serg_bnb(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):
-    psp = sergproc.ProcessorBNBSerg(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
-                                    eps=epsilon,
-                                    global_lipint=global_lipschitz_interval, use_symm_lipint=sym)
+def new_method(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True,
+               known_record=False, estimator=2):
+    psp = sergproc.ProcessorNew(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
+                                eps=epsilon,
+                                global_lipint=global_lipschitz_interval, use_symm_lipint=symm, estimator=estimator)
     sl = []
     subp = sub.Sub(0, [0, 0], psqproc.PSQEData(ival.Interval([prob.a, prob.b]), 0))
     psp.update_interval(subp)

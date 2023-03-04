@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import sympy as sym
 
 
 class Interval:
@@ -90,7 +91,8 @@ class Interval:
 
     def __mul__(self, other):
         ointerval = valueToInterval(other)
-        v = [self.x[0] * ointerval.x[0], self.x[0] * ointerval.x[1], self.x[1] * ointerval.x[0], self.x[1] * ointerval.x[1]]
+        v = [self.x[0] * ointerval.x[0], self.x[0] * ointerval.x[1], self.x[1] * ointerval.x[0],
+             self.x[1] * ointerval.x[1]]
         b = [min(v), max(v)]
         return Interval(b)
 
@@ -100,7 +102,7 @@ class Interval:
         #      self.x[1] / ointerval.x[1]]
         # f = [min(v), max(v)]
         # return Interval(f)
-        if not(valueToInterval(0).isIn(ointerval)):
+        if not (valueToInterval(0).isIn(ointerval)):
             v = [self.x[0] / ointerval.x[0], self.x[0] / ointerval.x[1], self.x[1] / ointerval.x[0],
                  self.x[1] / ointerval.x[1]]
             f = [min(v), max(v)]
@@ -111,7 +113,7 @@ class Interval:
             a1, a2 = self.x[0], self.x[1]
             b1, b2 = ointerval.x[0], ointerval.x[1]
             if b2 == 0:
-                c = self * Interval([-np.inf, 1/b1])
+                c = self * Interval([-np.inf, 1 / b1])
             elif b1 == 0:
                 c = self * Interval([1 / b2, np.inf])
             elif b1 < 0 and b2 > 0:
@@ -135,11 +137,10 @@ class Interval:
             # print(type(c))
             return c
 
-
     def __floordiv__(self, other):
         ointerval = valueToInterval(other)
         v = [self.x[0] // ointerval.x[0], self.x[0] // ointerval.x[1], self.x[1] // ointerval.x[0],
-                 self.x[1] // ointerval.x[1]]
+             self.x[1] // ointerval.x[1]]
         b = [min(v), max(v)]
         return Interval(b)
 
@@ -149,6 +150,44 @@ class Interval:
     def __rtruediv__(self, other):
         ointerval = valueToInterval(other)
         return ointerval.__truediv__(self)
+
+
+def sin(x_input):
+    if isinstance(x_input, Interval):
+        return _sin(x_input.x)
+    else:
+        return sym.sin(x_input)
+
+
+def cos(x_input):
+    if isinstance(x_input, Interval):
+        return _cos(x_input.x)
+    else:
+        return sym.cos(x_input)
+
+
+def exp(x_input):
+    if isinstance(x_input, Interval):
+        return _exp(x_input.x)
+    else:
+        return sym.exp(x_input)
+
+
+def abs(x_input):
+    if isinstance(x_input, Interval):
+        return _abs(x_input.x)
+    else:
+        if x_input < 0:
+            return -x_input
+        else:
+            return x_input
+
+
+def log(x_input, base):
+    if isinstance(x_input, Interval):
+        return _log(x_input.x, base)
+    else:
+        return sym.log(x_input, base)
 
 
 def valueToInterval(expr):
@@ -161,7 +200,7 @@ def valueToInterval(expr):
     return etmp
 
 
-def sin(x):
+def _sin(x):
     if isinstance(x, (int, np.integer)):
         return math.sin(x)
     elif isinstance(x, (float, np.float)):
@@ -170,19 +209,19 @@ def sin(x):
         y = [math.sin(x[0]), math.sin(x[1])]
         pi2 = 2 * math.pi
         pi05 = math.pi / 2
-        if math.ceil((x[0] - pi05)/pi2) <= math.floor((x[1] - pi05)/pi2):
+        if math.ceil((x[0] - pi05) / pi2) <= math.floor((x[1] - pi05) / pi2):
             b = 1
         else:
             b = max(y)
 
-        if math.ceil((x[0] + pi05)/pi2) <= math.floor((x[1] + pi05)/pi2):
+        if math.ceil((x[0] + pi05) / pi2) <= math.floor((x[1] + pi05) / pi2):
             a = -1
         else:
             a = min(y)
-        return Interval([a,b])
+        return Interval([a, b])
 
 
-def cos(x):
+def _cos(x):
     if isinstance(x, (int, np.integer)):
         return math.cos(x)
     elif isinstance(x, (float, np.float)):
@@ -190,22 +229,22 @@ def cos(x):
     else:
         y = [math.cos(x[0]), math.cos(x[1])]
         pi2 = 2 * math.pi
-        if math.ceil(x[0]/pi2) <= math.floor(x[1]/pi2):
+        if math.ceil(x[0] / pi2) <= math.floor(x[1] / pi2):
             b = 1
         else:
             b = max(y)
-        if math.ceil((x[0] - math.pi)/pi2) <= math.floor((x[1] - math.pi)/pi2):
+        if math.ceil((x[0] - math.pi) / pi2) <= math.floor((x[1] - math.pi) / pi2):
             a = -1
         else:
             a = min(y)
-        return Interval([a,b])
+        return Interval([a, b])
 
 
-def exp(x):
+def _exp(x):
     return Interval([math.exp(x[0]), math.exp(x[1])])
 
 
-def abs(x):
+def _abs(x):
     if x[1] < 0:
         return Interval([-x[0], -x[1]])
     elif x[0] < 0 and x[1] > 0:
@@ -217,7 +256,7 @@ def abs(x):
         return Interval([x[0], x[1]])
 
 
-def log(x, base):
+def _log(x, base):
     if base > 1:
         return Interval([math.log(x[0], base), math.log(x[1], base)])
     else:

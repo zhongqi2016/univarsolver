@@ -55,7 +55,6 @@ class PSL_Bounds:
             res = self.fb + self.bet * (x - self.b)
         return res
 
-
     def nestimator(self, x):
         return -self.estimator(x)
 
@@ -74,7 +73,7 @@ class PSL_Bounds:
         else:
             record_x = self.c
             record_v = self.estimator(self.c)
-        if self.under == False:
+        if not self.under:
             record_v = -record_v
         return record_x, record_v
 
@@ -83,3 +82,31 @@ class PSL_Bounds:
         Returns: Tuple (point c where the best value of objective is achieved (a or b), f(c))
         """
         return (self.a, self.fa) if self.fa <= self.fb else (self.b, self.fb)
+
+    def first_root_under(self):
+        root_of_left_part = self.a - self.fa / self.alp
+        if root_of_left_part <= self.c:
+            return root_of_left_part
+        if self.bet < 0:
+            root_of_right_part = self.b - self.fb / self.bet
+            if root_of_right_part <= self.b:
+                return root_of_right_part
+        else:
+            return self.a
+
+    def first_root_upper(self):
+        root_of_right_part = self.b - self.fb / self.bet
+        if root_of_right_part <= self.b:
+            if root_of_right_part >= self.c:
+                return root_of_right_part
+            else:
+                root_of_left_part = self.a - self.fa / self.alp
+                return root_of_left_part
+        else:
+            return self.b
+
+    def getNewTrialPoint(self):
+        if self.under:
+            return self.first_root_under()
+        else:
+            return self.first_root_upper()

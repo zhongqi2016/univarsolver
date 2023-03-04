@@ -38,11 +38,12 @@ class PSQE_Bounds:
         self.f = f
         self.df = df
 
-        delt = (self.dfb - self.dfa - alp * (b - a)) / (bet - alp)
+        delt = (self.dfb - self.dfa - self.alp * (b - a)) / (bet - alp)
         # print("delt = ", delt)
-        self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt ** 2 * (bet - alp) + alp * delt * (
-                b - a) + 0.5 * alp * (a ** 2 - b ** 2) + self.fa - self.fb) / (delt * (bet - alp))
+        self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt ** 2 * (self.bet - self.alp) + self.alp * delt * (
+                b - a) + 0.5 * self.alp * (a ** 2 - b ** 2) + self.fa - self.fb) / (delt * (self.bet - self.alp))
         self.d = self.c + delt
+
 
     def __repr__(self):
         return "Estimator " + "a = " + str(self.a) + ", b = " + str(self.b) + ", c = " + str(self.c) + ", d = " + str(

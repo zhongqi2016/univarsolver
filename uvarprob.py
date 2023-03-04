@@ -1,4 +1,5 @@
 import sympy as sym
+from interval import *
 
 
 class UniVarProblem:
@@ -16,7 +17,8 @@ class UniVarProblem:
         min_x: global minimum point
         logger: logging function
     """
-    def __init__(self, name, objective, a, b, min_f, min_x, logger = lambda x : x):
+
+    def __init__(self, name, objective, a, b, min_f, min_x, logger=lambda x: x):
         """ Constructor
         Args:
             name: name of a test example
@@ -34,16 +36,25 @@ class UniVarProblem:
 
         self.sym_df = self.sym_objective.diff()
         self.sym_ddf = self.sym_df.diff()
-        obj_f = sym.lambdify(x, self.sym_objective)
-        def obj_log(x): 
+
+        module_sin = {"sin": sin}
+        module_cos = {"cos": cos}
+        module_exp = {"exp": exp}
+        module_abs = {"abs": abs}
+        module_log = {"log": log}
+
+        obj_f = sym.lambdify(x, self.sym_objective,
+                             modules=[module_sin, module_cos, module_exp, module_abs, module_log])
+
+        def obj_log(x):
             logger(x)
             return obj_f(x)
-        
-#         self.objective = sym.lambdify(x, self.sym_objective)
-#         self.objective = obj_f
+
+        #         self.objective = sym.lambdify(x, self.sym_objective)
+        #         self.objective = obj_f
         self.objective = obj_log
-        self.df = sym.lambdify(x, self.sym_df)
-        self.ddf = sym.lambdify(x, self.sym_ddf)
+        self.df = sym.lambdify(x, self.sym_df, modules=[module_sin, module_cos, module_exp, module_abs, module_log])
+        self.ddf = sym.lambdify(x, self.sym_ddf, modules=[module_sin, module_cos, module_exp, module_abs, module_log])
         self.a = a
         self.b = b
         self.min_f = min_f
