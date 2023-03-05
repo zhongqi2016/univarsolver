@@ -70,7 +70,7 @@ class ProcessorNew:
             else:
                 ddi = self.problem.ddf(sub.data.ival)
             if self.use_symm_lipint:
-                L = max(-self.ddi.x[0], self.ddi.x[1])
+                L = max(-ddi.x[0], ddi.x[1])
                 ddi = ival.Interval([-L, L])
             return psqe.PSQE_Bounds(sub.data.ival[0], sub.data.ival[1], ddi[0], ddi[1], self.problem.objective,
                                     self.problem.df, under)

@@ -61,7 +61,7 @@ def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschit
     return TestResult(nsteps=steps, first_crossing_zero_point=subp.data.ival.x[0])
 
 
-def new_method(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True,
+def new_method(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=False,
                known_record=False, estimator=2):
     psp = sergproc.ProcessorNew(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
                                 eps=epsilon,
