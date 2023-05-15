@@ -46,7 +46,7 @@ bnb2_lip_points_list = []
 
 def fun():
     print('test.Index,PC_N,PI_N,QC_N,QI_N,PC_R,PI_R,QC_R,QI_R')
-    eps = 1e-3
+    eps = 1e-5
     for test in df.itertuples():
         points_db[test.Index] = {'bnb2_pslint_points_list': []}
         prob = uvpr.UniVarProblem(test.Index, test.objective, test.a, test.b, test.min_f, test.min_x,

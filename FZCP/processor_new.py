@@ -1,5 +1,5 @@
-import psqe_bounds as psqe
-import psl_bounds as psl
+import psqe_bounds_cy as psqe
+import psl_bounds_cy as psl
 import sys
 
 sys.path.append("..")
@@ -82,8 +82,8 @@ class ProcessorNew:
             return psl.PSL_Bounds(a, b, lip_alp, lip_bet, self.problem.objective(a), self.problem.objective(b),
                                   under)
         else:
-            return psqe.PSQE_Bounds(a, b, lip_alp, lip_bet, self.problem.objective,
-                                    self.problem.df, under)
+            return psqe.PSQE_Bounds(a, b, lip_alp, lip_bet, self.problem.objective(a), self.problem.objective(b),
+                                    self.problem.df(a), self.problem.df(b), under)
 
     def fzcp_process(self, sub_interval: ival.Interval):
         """
