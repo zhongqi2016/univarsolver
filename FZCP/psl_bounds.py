@@ -1,6 +1,7 @@
 """
 The piece-wise linear underestimator from Casado, L. G., MartÍnez, J. A., GarcÍa, I., & Sergeyev, Y. D. (2003). New interval analysis support functions using gradient information in a global minimization algorithm. Journal of Global Optimization, 25(4), 345-362.
 """
+import math
 
 
 class PSL_Bounds:
@@ -8,7 +9,7 @@ class PSL_Bounds:
     Piecewise linear underestimator
     """
 
-    def __init__(self, a, b, alp, bet, f, under):
+    def __init__(self, a: float, b: float, alp: float, bet: float, fa: float, fb: float, under: bool):
         """
         The piecewise linear estimator constiructor
         Args:
@@ -21,25 +22,24 @@ class PSL_Bounds:
         """
         self.a = a
         self.b = b
-        self.f = f
         self.under = under
         if under:
             self.alp = alp
             self.bet = bet
-            self.fa = f(a)
-            self.fb = f(b)
+            self.fa = fa
+            self.fb = fb
         else:
             self.alp = -bet
             self.bet = -alp
-            self.fa = -f(a)
-            self.fb = -f(b)
+            self.fa = -fa
+            self.fb = -fb
 
         self.c = (self.fa - self.fb + self.bet * self.b - self.alp * self.a) / (self.bet - self.alp)
 
     def __repr__(self):
         return "Piecewise linear estimator " + "a = " + str(self.a) + ", b = " + str(self.b) + ", c = " + str(
             self.c) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) \
-               + ", fa = " + str(self.fa) + ", fb = " + str(self.fb)
+            + ", fa = " + str(self.fa) + ", fb = " + str(self.fb)
 
     def estimator(self, x):
         """
@@ -77,14 +77,43 @@ class PSL_Bounds:
             record_v = -record_v
         return record_x, record_v
 
+    def lower_bound_and_point2(self):
+        """
+        Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
+        """
+        # record_x = None
+        # record_v = None
+        if self.alp >= 0:
+            # record_x = self.a
+            record_v = self.fa
+        elif self.bet <= 0:
+            # record_x = self.b
+            record_v = self.fb
+        else:
+            # record_x = self.c
+            record_v = self.estimator(self.c)
+
+        if record_v <= 0:
+            return 0
+        else:
+            return -1
+
     def record_and_point(self):
         """
         Returns: Tuple (point c where the best value of objective is achieved (a or b), f(c))
         """
         return (self.a, self.fa) if self.fa <= self.fb else (self.b, self.fb)
 
-    def first_root_under(self):
+    def get_left_end(self):
+        if self.alp >= 0:
+            return None
         root_of_left_part = self.a - self.fa / self.alp
+        if math.isnan(self.c):
+            print('Nan')
+            if root_of_left_part <= self.b:
+                return root_of_left_part
+            else:
+                return None
         if root_of_left_part <= self.c:
             return root_of_left_part
         if self.bet < 0:
@@ -92,9 +121,9 @@ class PSL_Bounds:
             if root_of_right_part <= self.b:
                 return root_of_right_part
         else:
-            return self.a
+            return None
 
-    def first_root_upper(self):
+    def get_right_end(self):
         root_of_right_part = self.b - self.fb / self.bet
         if root_of_right_part <= self.b:
             if root_of_right_part >= self.c:
@@ -104,9 +133,3 @@ class PSL_Bounds:
                 return root_of_left_part
         else:
             return self.b
-
-    def getNewTrialPoint(self):
-        if self.under:
-            return self.first_root_under()
-        else:
-            return self.first_root_upper()

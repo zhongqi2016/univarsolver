@@ -151,6 +151,17 @@ class Interval:
         ointerval = valueToInterval(other)
         return ointerval.__truediv__(self)
 
+    def __abs__(self):
+        if self.x[1] < 0:
+            return Interval([-self.x[1], -self.x[0]])
+        elif self.x[0] < 0:
+            if -self.x[0] > self.x[1]:
+                return Interval([self.x[1], -self.x[0]])
+            else:
+                return Interval([-self.x[0], self.x[1]])
+        else:
+            return Interval([self.x[0], self.x[1]])
+
 
 def sin(x_input):
     if isinstance(x_input, Interval):
@@ -183,11 +194,18 @@ def abs(x_input):
             return x_input
 
 
-def log(x_input, base):
+# def log(x_input, base):
+#     if isinstance(x_input, Interval):
+#         return _log(x_input.x, base)
+#     else:
+#         return sym.log(x_input, base)
+
+
+def log(x_input):
     if isinstance(x_input, Interval):
-        return _log(x_input.x, base)
+        return _ln(x_input.x)
     else:
-        return sym.log(x_input, base)
+        return sym.log(x_input)
 
 
 def valueToInterval(expr):
@@ -246,8 +264,8 @@ def _exp(x):
 
 def _abs(x):
     if x[1] < 0:
-        return Interval([-x[0], -x[1]])
-    elif x[0] < 0 and x[1] > 0:
+        return Interval([-x[1], -x[0]])
+    elif x[0] < 0:
         if -x[0] > x[1]:
             return Interval([x[1], -x[0]])
         else:
@@ -261,3 +279,7 @@ def _log(x, base):
         return Interval([math.log(x[0], base), math.log(x[1], base)])
     else:
         return Interval([math.log(x[1], base), math.log(x[0], base)])
+
+
+def _ln(x):
+    return Interval([math.log(x[0]), math.log(x[1])])

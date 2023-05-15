@@ -1,5 +1,5 @@
 import sys
-from sortedcontainers import SortedKeyList
+# from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import psqeprocessor_fzcp as psqproc
 import pslprocessor_fzcp as pslproc
@@ -62,14 +62,15 @@ def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschit
 
 
 def new_method(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=False,
-               known_record=False, estimator=2):
+               known_record=False, estimator=2, reduction=True):
     psp = sergproc.ProcessorNew(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
                                 eps=epsilon,
-                                global_lipint=global_lipschitz_interval, use_symm_lipint=symm, estimator=estimator)
+                                global_lipint=global_lipschitz_interval, use_symm_lipint=symm, estimator=estimator,
+                                reduction=reduction)
     sl = []
-    subp = sub.Sub(0, [0, 0], psqproc.PSQEData(ival.Interval([prob.a, prob.b]), 0))
-    psp.update_interval(subp)
-    sl.append(subp)
+    interval = ival.Interval([prob.a, prob.b])
+    psp.update_interval(interval)
+    sl.append(interval)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
-    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list)

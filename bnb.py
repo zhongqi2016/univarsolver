@@ -32,7 +32,7 @@ def bnb_fzcp(subs, max_steps, processor):
         number of actually performed steps
     """
     steps = 0
-    while len(subs) > 0 and steps <= max_steps:
+    while len(subs) > 0 and steps <= max_steps and processor.running:
         s = subs.pop()
         new_subs = processor.fzcp_process(s)
         subs.extend(new_subs)

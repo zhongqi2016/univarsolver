@@ -25,7 +25,8 @@ class PSQEData:
 
 class ProcessorNew:
 
-    def __init__(self, rec_v, rec_x, problem, eps, global_lipint=False, use_symm_lipint=False, estimator=2):
+    def __init__(self, rec_v, rec_x, problem, eps, global_lipint=False, use_symm_lipint=False, estimator=2,
+                 reduction=True):
         """
         Initializes processor
         Args:
@@ -47,10 +48,13 @@ class ProcessorNew:
         self.ddi = problem.ddf(ival.Interval([problem.a, problem.b]))
         self.di = problem.df(ival.Interval([problem.a, problem.b]))
         self.estimator = estimator
+        self.reduction = reduction
+        self.running = True
 
-    def compute_bounds(self, sub, under):
+    def compute_bounds(self, sub_interval: ival.Interval, under: bool):
         """
         Args:
+            sub_interval:
             under: if True compute the under bound
         """
 
@@ -58,73 +62,139 @@ class ProcessorNew:
             if self.global_lipint:
                 di = self.di
             else:
-                di = self.problem.df(sub.data.ival)
+                di = self.problem.df(sub_interval)
             if self.use_symm_lipint:
                 L = max(-di[0], di[1])
                 di = ival.Interval([-L, L])
-            return psl.PSL_Bounds(sub.data.ival[0], sub.data.ival[1], di[0], di[1], self.problem.objective,
-                                  under)
+            return self.Bounds(sub_interval.x[0], sub_interval.x[1], di[0], di[1], under)
         else:
             if self.global_lipint:
                 ddi = self.ddi
             else:
-                ddi = self.problem.ddf(sub.data.ival)
+                ddi = self.problem.ddf(sub_interval)
             if self.use_symm_lipint:
                 L = max(-ddi.x[0], ddi.x[1])
                 ddi = ival.Interval([-L, L])
-            return psqe.PSQE_Bounds(sub.data.ival[0], sub.data.ival[1], ddi[0], ddi[1], self.problem.objective,
+            return self.Bounds(sub_interval.x[0], sub_interval.x[1], ddi[0], ddi[1], under)
+
+    def Bounds(self, a: float, b: float, lip_alp: float, lip_bet: float, under: bool):
+        if self.estimator == 1:
+            return psl.PSL_Bounds(a, b, lip_alp, lip_bet, self.problem.objective(a), self.problem.objective(b),
+                                  under)
+        else:
+            return psqe.PSQE_Bounds(a, b, lip_alp, lip_bet, self.problem.objective,
                                     self.problem.df, under)
 
-    def fzcp_process(self, sub):
+    def fzcp_process(self, sub_interval: ival.Interval):
         """
         Process of branching
         """
+
         lst = []
         obj = self.problem.objective
-        width_of_interval = sub.data.ival.x[1] - sub.data.ival.x[0]
-        in_bounds = self.update_interval(sub)
-        if in_bounds and sub.data.ival[0] <= self.rec_x:
-            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
-                # If width of the interval satisfies the precision requirement
-                self.res_list.append(sub.data.split_point)
+        # if self.rec_x - sub.data.ival.x[0] <= self.eps:
+        #     self.res_list.append(sub.data.ival.x[0])
+        #     self.running = False
+        #     return lst
+        if sub_interval.x[1] - sub_interval.x[0] <= self.eps:
+            if obj(sub_interval.x[1]) <= 1e-14:
+                self.res_list.append(sub_interval.x[0])
+                self.running = False
+                return lst
             else:
-                new_width = sub.data.ival.x[1] - sub.data.ival.x[0]
+                return lst
+        width_of_interval = sub_interval.x[1] - sub_interval.x[0]
+        in_bounds = self.update_interval(sub_interval)
+
+        if in_bounds and sub_interval.x[0] <= self.rec_x:
+            split_point = sub_interval.x[0] + (sub_interval.x[1] - sub_interval.x[0]) / 2
+            if sub_interval.x[1] - sub_interval.x[0] < self.eps and obj(sub_interval.x[1]) <= 0:
+                # If width of the interval satisfies the precision requirement
+                self.res_list.append(split_point)
+                self.running = False
+            else:
+                new_width = sub_interval.x[1] - sub_interval.x[0]
                 # print(new_width / width_of_interval)
                 if new_width / width_of_interval > 0.7:
-                    sub_1 = sb.Sub(sub.level + 1, [0, 0],
-                                   PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
-                    if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
-                        self.rec_x = sub_1.data.ival[1]
+                    sub_1 = ival.Interval([sub_interval.x[0], split_point])
+                    if obj(sub_1.x[1]) <= 0 and sub_1.x[1] < self.rec_x:
+                        self.rec_x = sub_1.x[1]
                     else:
-                        sub_2 = sb.Sub(sub.level + 1, [0, 0],
-                                       PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
-
+                        sub_2 = ival.Interval([split_point, sub_interval.x[1]])
+                        # if obj(sub_2.data.ival[1]) <= 0:
+                        #     self.rec_x = sub_2.data.ival[1]
                         lst.append(sub_2)
                     lst.append(sub_1)
                 else:
-                    if obj(sub.data.ival[1]) <= 0 and sub.data.ival[1] < self.rec_x:
-                        self.rec_x = sub.data.ival[1]
-                    lst.append(sub)
+                    # if obj(sub.data.ival[1]) <= 0 and sub.data.ival[1] < self.rec_x:
+                    #     self.rec_x = sub.data.ival[1]
+                    lst.append(sub_interval)
 
         return lst
 
-    def update_interval(self, sub):
+    # def fzcp_process(self, sub):
+    #     """
+    #     Process of branching
+    #     """
+    #
+    #     lst = []
+    #     obj = self.problem.objective
+    #     if self.rec_x - sub.data.ival.x[0] <= self.eps:
+    #         self.res_list.append(sub.data.ival.x[0])
+    #         self.running = False
+    #         return lst
+    #     if sub.data.ival.x[1] - sub.data.ival.x[0] <= self.eps:
+    #         if obj(sub.data.ival.x[1]) <= 1e-14:
+    #             self.res_list.append(sub.data.ival.x[0])
+    #             self.running = False
+    #             return lst
+    #     width_of_interval = sub.data.ival.x[1] - sub.data.ival.x[0]
+    #     in_bounds = self.update_interval(sub)
+    #
+    #     if in_bounds and sub.data.ival[0] <= self.rec_x:
+    #         sub.data.split_point = sub.data.ival.x[0] + (sub.data.ival.x[1] - sub.data.ival.x[0]) / 2
+    #
+    #         new_width = sub.data.ival.x[1] - sub.data.ival.x[0]
+    #         # print(new_width / width_of_interval)
+    #         if new_width / width_of_interval > 0.7:
+    #             sub_1 = sb.Sub(sub.level + 1, [0, 0],
+    #                            PSQEData(ival.Interval([sub.data.ival.x[0], sub.data.split_point]), None))
+    #             if obj(sub_1.data.ival[1]) <= 0 and sub_1.data.ival[1] < self.rec_x:
+    #                 self.rec_x = sub_1.data.ival[1]
+    #             else:
+    #                 sub_2 = sb.Sub(sub.level + 1, [0, 0],
+    #                                PSQEData(ival.Interval([sub.data.split_point, sub.data.ival.x[1]]), None))
+    #                 if obj(sub_2.data.ival[1]) <= 0:
+    #                     self.rec_x = sub_2.data.ival[1]
+    #                 lst.append(sub_2)
+    #             lst.append(sub_1)
+    #         else:
+    #             if obj(sub.data.ival[1]) <= 0 and sub.data.ival[1] < self.rec_x:
+    #                 self.rec_x = sub.data.ival[1]
+    #             lst.append(sub)
+    #
+    #     return lst
+
+    def update_interval(self, sub_interval: ival.Interval):
         """
         Narrow the interval by the zeros of the upper and under bounds
         """
-        upper_estimator = self.compute_bounds(sub, False)
-        max_x, sub.bound[1] = upper_estimator.lower_bound_and_point()
-        lower_estimator = self.compute_bounds(sub, True)
-        min_x, sub.bound[0] = lower_estimator.lower_bound_and_point()
-        if sub.bound[0] <= 0 <= sub.bound[1]:
-            left_end = lower_estimator.getNewTrialPoint()
-            right_end = upper_estimator.getNewTrialPoint()
-            sub.data.ival.x[0] = left_end
-            if right_end < sub.data.ival.x[1]:
-                sub.data.ival.x[1] = right_end
-            sub.data.split_point = sub.data.ival.x[0] + (sub.data.ival.x[1] - sub.data.ival.x[0]) / 2
+        lower_estimator = self.compute_bounds(sub_interval, under=True)
+        left_end = lower_estimator.get_left_end()
+        # reocrd_x, record_v = lower_estimator.lower_bound_and_point()
+        # if record_v > 0 and left_end is not None:
+        #     print('erro', lower_estimator.a, lower_estimator.b, left_end)
+        # if left_end is not None:
+        upper_estimator = self.compute_bounds(sub_interval, under=False)
+        right_end = upper_estimator.get_right_end()
+        if left_end is not None:
+            if self.reduction:
+                # upper_estimator = self.compute_bounds(sub, under=False)
+                # right_end = upper_estimator.get_right_end()
+                if left_end > sub_interval.x[0]:
+                    sub_interval.x[0] = left_end
+                if right_end < sub_interval.x[1]:
+                    sub_interval.x[1] = right_end
             return True
-            # print("left:", self.problem.objective(sub.data.ival.x[0]))
-            # print("[", sub.data.ival.x[0], ", ", sub.data.ival.x[1], "],", sub.data.split_point)
         else:
             return False
