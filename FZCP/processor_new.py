@@ -3,7 +3,6 @@ import psl_bounds_cy as psl
 import sys
 
 sys.path.append("..")
-import sub as sb
 import interval as ival
 
 
@@ -104,23 +103,32 @@ class ProcessorNew:
             else:
                 return lst
         width_of_interval = sub_interval.x[1] - sub_interval.x[0]
-        in_bounds = self.update_interval(sub_interval)
+        # in_bounds = self.update_interval(sub_interval)
 
-        if in_bounds and sub_interval.x[0] <= self.rec_x:
-            split_point = sub_interval.x[0] + (sub_interval.x[1] - sub_interval.x[0]) / 2
-            if sub_interval.x[1] - sub_interval.x[0] < self.eps and obj(sub_interval.x[1]) <= 0:
+        lower_estimator = self.compute_bounds(sub_interval, under=True)
+        left_end = lower_estimator.get_left_end()
+        upper_estimator = self.compute_bounds(sub_interval, under=False)
+        right_end = upper_estimator.get_right_end()
+        if right_end > sub_interval.x[1]:
+            right_end = sub_interval.x[1]
+        if left_end is not None and sub_interval.x[0] <= self.rec_x:
+            if self.reduction is False:
+                left_end = sub_interval.x[0]
+                right_end = sub_interval.x[1]
+            split_point = left_end + (right_end - left_end) / 2
+            if right_end - left_end < self.eps and obj(right_end) <= 0:
                 # If width of the interval satisfies the precision requirement
                 self.res_list.append(split_point)
                 self.running = False
             else:
-                new_width = sub_interval.x[1] - sub_interval.x[0]
+                new_width = right_end - left_end
                 # print(new_width / width_of_interval)
                 if new_width / width_of_interval > 0.7:
-                    sub_1 = ival.Interval([sub_interval.x[0], split_point])
+                    sub_1 = ival.Interval([left_end, split_point])
                     if obj(sub_1.x[1]) <= 0 and sub_1.x[1] < self.rec_x:
                         self.rec_x = sub_1.x[1]
                     else:
-                        sub_2 = ival.Interval([split_point, sub_interval.x[1]])
+                        sub_2 = ival.Interval([split_point, right_end])
                         # if obj(sub_2.data.ival[1]) <= 0:
                         #     self.rec_x = sub_2.data.ival[1]
                         lst.append(sub_2)
@@ -128,6 +136,8 @@ class ProcessorNew:
                 else:
                     # if obj(sub.data.ival[1]) <= 0 and sub.data.ival[1] < self.rec_x:
                     #     self.rec_x = sub.data.ival[1]
+                    sub_interval[0] = left_end
+                    sub_interval[1] = right_end
                     lst.append(sub_interval)
 
         return lst
@@ -181,20 +191,18 @@ class ProcessorNew:
         """
         lower_estimator = self.compute_bounds(sub_interval, under=True)
         left_end = lower_estimator.get_left_end()
-        # reocrd_x, record_v = lower_estimator.lower_bound_and_point()
-        # if record_v > 0 and left_end is not None:
-        #     print('erro', lower_estimator.a, lower_estimator.b, left_end)
-        # if left_end is not None:
         upper_estimator = self.compute_bounds(sub_interval, under=False)
         right_end = upper_estimator.get_right_end()
+        le = sub_interval.x[0]
+        re = sub_interval.x[1]
         if left_end is not None:
             if self.reduction:
                 # upper_estimator = self.compute_bounds(sub, under=False)
                 # right_end = upper_estimator.get_right_end()
                 if left_end > sub_interval.x[0]:
-                    sub_interval.x[0] = left_end
+                    le = left_end
                 if right_end < sub_interval.x[1]:
-                    sub_interval.x[1] = right_end
+                    re = right_end
             return True
         else:
             return False

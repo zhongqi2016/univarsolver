@@ -5,9 +5,9 @@ cdef class PSQE_Bounds:
     """
     Piecewise quadratic underestimator
     """
-    cdef double a, b, alp, bet, fa, fb, dfa, dfb, c, d
+    cdef long double a, b, alp, bet, fa, fb, dfa, dfb
     cdef bint under
-
+    cdef long double c, d
     def __init__(self, a, b, alp, bet, fa, fb, dfa, dfb, under: bool):
         """
         The smooth piecewise quadratic estimator constiructor
@@ -37,7 +37,7 @@ cdef class PSQE_Bounds:
             self.fb = -fb
             self.dfa = -dfa
             self.dfb = -dfb
-        cdef delt
+        cdef long double delt
         delt = (self.dfb - self.dfa - self.alp * (b - a)) / (bet - alp)
         # print("delt = ", delt)
         # self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt ** 2 * (
@@ -54,7 +54,7 @@ cdef class PSQE_Bounds:
         #           self.alp, 'beta=', self.bet)
         if self.d > self.b:
             print('error d>b')
-            print('a=', self.a, 'b=', self.b, 'c=', self.c, 'delt=', delt, 'fa=', self.fa, 'fb=', self.fb, 'alp=',
+            print('a=', self.a, 'b=', self.b, 'd=', self.d, 'delt=', delt, 'fa=', self.fa, 'fb=', self.fb, 'alp=',
                   self.alp, 'beta=', self.bet)
 
     def __repr__(self):
@@ -107,46 +107,6 @@ cdef class PSQE_Bounds:
         # else:
         #     return -res
 
-    # def lower_bound_and_point(self):
-    #     """
-    #     Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
-    #     """
-    #     x_list = [self.a, self.c, self.d, self.b]
-    #     df_list = [self.estimators_derivative(x) for x in x_list]
-    #     check_list = [self.a, self.b]
-    #     record_x = None
-    #     record_v = None
-    #     ln = len(x_list)
-    #     for i in range(ln - 1):
-    #         x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
-    #         if not (x is None):
-    #             check_list.append(x)
-    #     # print(check_list)
-    #     for x in check_list:
-    #         v = self.estimator(x)
-    #         if record_v is None or v < record_v:
-    #             record_v = v
-    #             record_x = x
-    #     if not self.under:
-    #         record_v = -record_v
-    #     return record_x, record_v
-
-    # def lower_bound_and_point2(self):
-    #     """
-    #     Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
-    #     """
-    #     if self.fb <= 0:
-    #         return 0
-    #     x_list = [self.a, self.c, self.d, self.b]
-    #     df_list = [self.estimators_derivative(x) for x in x_list]
-    #     ln = len(x_list)
-    #
-    #     for i in range(ln - 1):
-    #         x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
-    #         if (x is not None) and self.estimator(x) <= 0:
-    #             return i + 1
-    #
-    #     return -1
 
     def record_and_point(self):
         """
@@ -396,6 +356,11 @@ cdef class PSQE_Bounds:
 
         return self.b
 
+    cpdef check_error(self):
+        if self.d>self.b:
+            return False
+        else:
+            return True
 # def get_trial_point_under(self):
 #     if self.estimator(self.c) <= 0:
 #         if self.alp > 0:

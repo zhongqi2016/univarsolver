@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import sympy as sym
 
 
 class Interval:
@@ -167,21 +166,21 @@ def sin(x_input):
     if isinstance(x_input, Interval):
         return _sin(x_input.x)
     else:
-        return sym.sin(x_input)
+        return math.sin(x_input)
 
 
 def cos(x_input):
     if isinstance(x_input, Interval):
         return _cos(x_input.x)
     else:
-        return sym.cos(x_input)
+        return math.cos(x_input)
 
 
 def exp(x_input):
     if isinstance(x_input, Interval):
         return _exp(x_input.x)
     else:
-        return sym.exp(x_input)
+        return math.exp(x_input)
 
 
 def abs(x_input):
@@ -194,18 +193,11 @@ def abs(x_input):
             return x_input
 
 
-# def log(x_input, base):
-#     if isinstance(x_input, Interval):
-#         return _log(x_input.x, base)
-#     else:
-#         return sym.log(x_input, base)
-
-
 def log(x_input):
     if isinstance(x_input, Interval):
         return _ln(x_input.x)
     else:
-        return sym.log(x_input)
+        return math.log(x_input)
 
 
 def valueToInterval(expr):
@@ -219,43 +211,43 @@ def valueToInterval(expr):
 
 
 def _sin(x):
-    if isinstance(x, (int, np.integer)):
-        return math.sin(x)
-    elif isinstance(x, (float, np.float)):
-        return math.sin(x)
+    # if isinstance(x, (int, np.integer)):
+    #     return math.sin(x)
+    # elif isinstance(x, (float, np.float)):
+    #     return math.sin(x)
+    # else:
+    y = [math.sin(x[0]), math.sin(x[1])]
+    pi2 = 2 * math.pi
+    pi05 = math.pi / 2
+    if math.ceil((x[0] - pi05) / pi2) <= math.floor((x[1] - pi05) / pi2):
+        b = 1
     else:
-        y = [math.sin(x[0]), math.sin(x[1])]
-        pi2 = 2 * math.pi
-        pi05 = math.pi / 2
-        if math.ceil((x[0] - pi05) / pi2) <= math.floor((x[1] - pi05) / pi2):
-            b = 1
-        else:
-            b = max(y)
+        b = max(y)
 
-        if math.ceil((x[0] + pi05) / pi2) <= math.floor((x[1] + pi05) / pi2):
-            a = -1
-        else:
-            a = min(y)
-        return Interval([a, b])
+    if math.ceil((x[0] + pi05) / pi2) <= math.floor((x[1] + pi05) / pi2):
+        a = -1
+    else:
+        a = min(y)
+    return Interval([a, b])
 
 
 def _cos(x):
-    if isinstance(x, (int, np.integer)):
-        return math.cos(x)
-    elif isinstance(x, (float, np.float)):
-        return math.cos(x)
+    # if isinstance(x, (int, np.integer)):
+    #     return math.cos(x)
+    # elif isinstance(x, (float, np.float)):
+    #     return math.cos(x)
+    # else:
+    y = [math.cos(x[0]), math.cos(x[1])]
+    pi2 = 2 * math.pi
+    if math.ceil(x[0] / pi2) <= math.floor(x[1] / pi2):
+        b = 1
     else:
-        y = [math.cos(x[0]), math.cos(x[1])]
-        pi2 = 2 * math.pi
-        if math.ceil(x[0] / pi2) <= math.floor(x[1] / pi2):
-            b = 1
-        else:
-            b = max(y)
-        if math.ceil((x[0] - math.pi) / pi2) <= math.floor((x[1] - math.pi) / pi2):
-            a = -1
-        else:
-            a = min(y)
-        return Interval([a, b])
+        b = max(y)
+    if math.ceil((x[0] - math.pi) / pi2) <= math.floor((x[1] - math.pi) / pi2):
+        a = -1
+    else:
+        a = min(y)
+    return Interval([a, b])
 
 
 def _exp(x):
