@@ -107,12 +107,24 @@ class ProcessorNew:
 
         lower_estimator = self.compute_bounds(sub_interval, under=True)
         left_end = lower_estimator.get_left_end()
-        upper_estimator = self.compute_bounds(sub_interval, under=False)
-        right_end = upper_estimator.get_right_end()
-        if right_end > sub_interval.x[1]:
-            right_end = sub_interval.x[1]
+
         if left_end is not None and sub_interval.x[0] <= self.rec_x:
-            if self.reduction is False:
+            if self.reduction > 0:
+                if self.reduction == 2:
+                    upper_estimator = self.compute_bounds(sub_interval, under=False)
+                    right_end = upper_estimator.get_right_end()
+                    if right_end is None:
+                        right_end = lower_estimator.get_right_end2()
+                if self.reduction == 1:
+                    if lower_estimator.get_fb() > 0:
+                        right_end = lower_estimator.get_right_end2()
+                    else:
+                        upper_estimator = self.compute_bounds(sub_interval, under=False)
+                        right_end = upper_estimator.get_right_end()
+
+                if right_end > sub_interval.x[1]:
+                    right_end = sub_interval.x[1]
+            elif self.reduction == 0:
                 left_end = sub_interval.x[0]
                 right_end = sub_interval.x[1]
             split_point = left_end + (right_end - left_end) / 2

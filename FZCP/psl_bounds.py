@@ -123,6 +123,24 @@ class PSL_Bounds:
         else:
             return None
 
+    def get_right_end2(self):
+        if self.bet < 0:
+            return None
+        root_of_right_part = self.b - self.fb / self.bet
+        if self.alp == self.bet:
+            print('Nan')
+            if root_of_right_part >= self.a:
+                return root_of_right_part
+            else:
+                return None
+        if root_of_right_part >= self.c:
+            return root_of_right_part
+        if self.bet < 0:
+            root_of_left_part = self.a - self.fa / self.alp
+            if root_of_left_part >= self.a:
+                return root_of_left_part
+        return None
+
     def get_right_end(self):
         root_of_right_part = self.b - self.fb / self.bet
         if root_of_right_part <= self.b:

@@ -5,9 +5,9 @@ cdef class PSQE_Bounds:
     """
     Piecewise quadratic underestimator
     """
-    cdef long double a, b, alp, bet, fa, fb, dfa, dfb
+    cdef double a, b, alp, bet, fa, fb, dfa, dfb
     cdef bint under
-    cdef long double c, d
+    cdef double c, d
     def __init__(self, a, b, alp, bet, fa, fb, dfa, dfb, under: bool):
         """
         The smooth piecewise quadratic estimator constiructor
@@ -37,7 +37,7 @@ cdef class PSQE_Bounds:
             self.fb = -fb
             self.dfa = -dfa
             self.dfb = -dfb
-        cdef long double delt
+        cdef double delt
         delt = (self.dfb - self.dfa - self.alp * (b - a)) / (bet - alp)
         # print("delt = ", delt)
         # self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt ** 2 * (
@@ -61,6 +61,9 @@ cdef class PSQE_Bounds:
         return "Estimator " + "a = " + str(self.a) + ", b = " + str(self.b) + ", c = " + str(self.c) + ", d = " + str(
             self.d) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) + ", fa = " + str(
             self.fa) + ", fb = " + str(self.fb) + ", dfa = " + str(self.dfa) + ", dfb = " + str(self.dfb)
+
+    cpdef get_fb(self):
+        return self.fb
 
     cpdef estimator(self, double x):
         """
@@ -106,7 +109,6 @@ cdef class PSQE_Bounds:
         return res
         # else:
         #     return -res
-
 
     def record_and_point(self):
         """
@@ -320,6 +322,37 @@ cdef class PSQE_Bounds:
             d3 = self.delta_third()
             if self.under_est_der_le_0(self.d, self.b) and d3 >= 0:
                 return self.root_third_left(d3)
+        # d3 = self.delta_third()
+        # if d3 >= 0:
+        #     return self.root_third_left(d3)
+        return None
+
+    cpdef get_right_end2(self):
+        # if (flag1)==true, in first section of estimator have root.
+        cdef double d1
+        if self.estimator(self.d) <= 0:
+            d1 = self.delta_third()
+            return self.root_third_right(d1)
+        else:
+            d1 = self.delta_third()
+            if self.under_est_der_le_0(self.d, self.b) and d1 >= 0:
+                return self.root_third_right(d1)
+        cdef double d2
+        if self.estimator(self.c) <= 0:
+            d2 = self.delta_second()
+            return self.root_second_right(d2)
+        else:
+            d2 = self.delta_second()
+            if self.under_est_der_le_0(self.c, self.d) and d2 >= 0:
+                return self.root_second_right(d2)
+        cdef double d3
+        if self.estimator(self.a) <= 0:
+            d3 = self.delta_first()
+            return self.root_first_right(d3)
+        else:
+            d3 = self.delta_third()
+            if self.under_est_der_le_0(self.a, self.c) and d3 >= 0:
+                return self.root_first_right(d3)
 
         # d3 = self.delta_third()
         # if d3 >= 0:
@@ -354,10 +387,10 @@ cdef class PSQE_Bounds:
             if self.upper_est_der_le_0(self.d, self.b) and d3 >= 0:
                 return self.root_third_right(d3)
 
-        return self.b
+        return None
 
     cpdef check_error(self):
-        if self.d>self.b:
+        if self.d > self.b:
             return False
         else:
             return True

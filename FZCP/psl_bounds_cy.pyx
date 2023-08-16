@@ -40,6 +40,9 @@ cdef class PSL_Bounds:
             self.c) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) \
             + ", fa = " + str(self.fa) + ", fb = " + str(self.fb)
 
+    cpdef get_fb(self):
+        return self.fb
+
     cpdef estimator(self, double x):
         """
         The piecewise linear underestimator
@@ -120,9 +123,37 @@ cdef class PSL_Bounds:
             root_of_right_part = self.b - self.fb / self.bet
             if root_of_right_part <= self.b:
                 return root_of_right_part
-        else:
+        return None
+    cpdef public get_right_end2(self):
+        if self.bet < 0:
             return None
+        cdef double root_of_right_part = self.b - self.fb / self.bet
+        if self.alp == self.bet:
+            print('Nan')
+            if root_of_right_part >= self.a:
+                return root_of_right_part
+            else:
+                return None
+        if root_of_right_part >= self.c:
+            return root_of_right_part
+        cdef double root_of_left_part
+        if self.bet < 0:
+            root_of_left_part = self.a - self.fa / self.alp
+            if root_of_left_part >= self.a:
+                return root_of_left_part
+        return None
 
+    # cpdef public get_right_end(self):
+    #     cdef double root_of_right_part = self.b - self.fb / self.bet
+    #     cdef double root_of_left_part
+    #     if root_of_right_part <= self.b:
+    #         if root_of_right_part >= self.c:
+    #             return root_of_right_part
+    #         else:
+    #             root_of_left_part = self.a - self.fa / self.alp
+    #             return root_of_left_part
+    #     else:
+    #         return self.b
     cpdef public get_right_end(self):
         cdef double root_of_right_part = self.b - self.fb / self.bet
         cdef double root_of_left_part
@@ -133,4 +164,4 @@ cdef class PSL_Bounds:
                 root_of_left_part = self.a - self.fa / self.alp
                 return root_of_left_part
         else:
-            return self.b
+            return None
