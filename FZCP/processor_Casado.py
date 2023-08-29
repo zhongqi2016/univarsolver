@@ -69,9 +69,9 @@ class CasProcessor:
     def fzcp_process(self, sub):
         lst = []
         obj = self.problem.objective
-        obj(1)
+        # obj(1)
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
-            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) <= 0:
+            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) < 1e-14:
                 self.res_list.append(sub.data.split_point)
                 self.running = False
                 return lst

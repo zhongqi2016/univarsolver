@@ -1,5 +1,7 @@
-import psqe_bounds_cy as psqe
-import psl_bounds_cy as psl
+# import psqe_bounds_cy as psqe
+# import psl_bounds_cy as psl
+import psqe_bounds as psqe
+import psl_bounds as psl
 import sys
 
 sys.path.append("..")

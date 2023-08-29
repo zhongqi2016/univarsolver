@@ -81,6 +81,9 @@ class PSQE_Bounds:
         # else:
         #     return -res
 
+    def get_fb(self):
+        return self.fb
+
     def nestimator(self, x):
         return -self.estimator(x)
 
@@ -390,6 +393,35 @@ class PSQE_Bounds:
 
         return self.b
 
+    def get_right_end2(self):
+        # if (flag1)==true, in first section of estimator have root.
+
+        if self.estimator(self.d) <= 0:
+            d1 = self.delta_third()
+            return self.root_third_right(d1)
+        else:
+            d1 = self.delta_third()
+            if self.under_est_der_le_0(self.d, self.b) and d1 >= 0:
+                return self.root_third_right(d1)
+        if self.estimator(self.c) <= 0:
+            d2 = self.delta_second()
+            return self.root_second_right(d2)
+        else:
+            d2 = self.delta_second()
+            if self.under_est_der_le_0(self.c, self.d) and d2 >= 0:
+                return self.root_second_right(d2)
+        if self.estimator(self.a) <= 0:
+            d3 = self.delta_first()
+            return self.root_first_right(d3)
+        else:
+            d3 = self.delta_third()
+            if self.under_est_der_le_0(self.a, self.c) and d3 >= 0:
+                return self.root_first_right(d3)
+
+        # d3 = self.delta_third()
+        # if d3 >= 0:
+        #     return self.root_third_left(d3)
+        return None
 # def get_trial_point_under(self):
 #     if self.estimator(self.c) <= 0:
 #         if self.alp > 0:

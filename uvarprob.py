@@ -42,9 +42,10 @@ class UniVarProblem:
         module_exp = {"exp": exp}
         # module_abs = {"abs": abs}
         module_log = {"log": log}
+        module_sqrt = {"sqrt": sqrt}
 
         obj_f = sym.lambdify(x, self.sym_objective,
-                             modules=[module_sin, module_cos, module_exp, module_log])
+                             modules=[module_sin, module_cos, module_exp, module_log, module_sqrt])
 
         def obj_log(x):
             logger(x)
@@ -54,9 +55,9 @@ class UniVarProblem:
         #         self.objective = obj_f
         self.objective = obj_log
         self.df = sym.lambdify(x, self.sym_df,
-                               modules=[module_sin, module_cos, module_exp, module_log])
+                               modules=[module_sin, module_cos, module_exp, module_log, module_sqrt])
         self.ddf = sym.lambdify(x, self.sym_ddf,
-                                modules=[module_sin, module_cos, module_exp, module_log])
+                                modules=[module_sin, module_cos, module_exp, module_log, module_sqrt])
         self.a = a
         self.b = b
         self.min_f = min_f

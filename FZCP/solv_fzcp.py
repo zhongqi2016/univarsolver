@@ -47,6 +47,7 @@ def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_i
 
 
 def cas(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, known_record=False):
+    epsilon = epsilon
     psp = casproc.CasProcessor(rec_v=get_initial_recval(prob, known_record), rec_x=prob.b, problem=prob,
                                eps=epsilon)
     sl = []
@@ -55,7 +56,7 @@ def cas(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, known_record=False)
     sl.append(subp)
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
-    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list[0])
+    return TestResult(nsteps=steps, first_crossing_zero_point=psp.res_list)
 
 
 def method2(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=True, known_record=False):

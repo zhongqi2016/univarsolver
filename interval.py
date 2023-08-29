@@ -200,6 +200,13 @@ def log(x_input):
         return math.log(x_input)
 
 
+def sqrt(x_input):
+    if isinstance(x_input, Interval):
+        return _sqrt(x_input.x)
+    else:
+        return math.sqrt(x_input)
+
+
 def valueToInterval(expr):
     if isinstance(expr, int):
         etmp = Interval([expr, expr])
@@ -271,6 +278,10 @@ def _log(x, base):
         return Interval([math.log(x[0], base), math.log(x[1], base)])
     else:
         return Interval([math.log(x[1], base), math.log(x[0], base)])
+
+
+def _sqrt(x):
+    return Interval([math.sqrt(x[0]), math.sqrt(x[1])])
 
 
 def _ln(x):

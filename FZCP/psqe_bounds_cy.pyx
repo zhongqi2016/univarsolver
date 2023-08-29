@@ -54,7 +54,8 @@ cdef class PSQE_Bounds:
         #           self.alp, 'beta=', self.bet)
         if self.d > self.b:
             print('error d>b')
-            print('a=', self.a, 'b=', self.b, 'd=', self.d, 'delt=', delt, 'fa=', self.fa, 'fb=', self.fb, 'alp=',
+            print('a=', self.a, 'b=', self.b, 'c=', self.c, 'd=', self.d, 'delt=', delt, 'fa=', self.fa, 'fb=', self.fb,
+                  'alp=',
                   self.alp, 'beta=', self.bet)
 
     def __repr__(self):

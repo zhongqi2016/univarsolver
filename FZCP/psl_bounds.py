@@ -55,6 +55,9 @@ class PSL_Bounds:
             res = self.fb + self.bet * (x - self.b)
         return res
 
+    def get_fb(self):
+        return self.fb
+
     def nestimator(self, x):
         return -self.estimator(x)
 
@@ -151,3 +154,4 @@ class PSL_Bounds:
                 return root_of_left_part
         else:
             return self.b
+
