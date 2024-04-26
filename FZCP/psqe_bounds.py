@@ -36,7 +36,7 @@ class PSQE_Bounds:
             self.dfa = -dfa
             self.dfb = -dfb
 
-        delt = (self.dfb - self.dfa - self.alp * (b - a)) / (bet - alp)
+        delt = (self.dfb - self.dfa - self.alp * (self.b - self.a)) / (self.bet - self.alp)
         # print("delt = ", delt)
         # self.c = ((delt - a) * self.dfa + (b - delt) * self.dfb + 0.5 * delt ** 2 * (
         #         self.bet - self.alp) + self.alp * delt * (
@@ -131,9 +131,6 @@ class PSQE_Bounds:
         return record_x, record_v
 
     def lower_bound_and_point2(self):
-        """
-        Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
-        """
         if self.fb <= 0:
             return 0
         x_list = [self.a, self.c, self.d, self.b]
@@ -365,7 +362,7 @@ class PSQE_Bounds:
 
         return None
 
-    def get_right_end(self):
+    def get_right_end_upper_bound(self):
         # if (flag1)==true, in first section of estimator have root.
         if self.estimator(self.c) >= 0:
             d1 = self.delta_first()
@@ -393,7 +390,7 @@ class PSQE_Bounds:
 
         return self.b
 
-    def get_right_end2(self):
+    def get_right_end_under_bound(self):
         # if (flag1)==true, in first section of estimator have root.
 
         if self.estimator(self.d) <= 0:
@@ -417,55 +414,4 @@ class PSQE_Bounds:
             d3 = self.delta_third()
             if self.under_est_der_le_0(self.a, self.c) and d3 >= 0:
                 return self.root_first_right(d3)
-
-        # d3 = self.delta_third()
-        # if d3 >= 0:
-        #     return self.root_third_left(d3)
         return None
-# def get_trial_point_under(self):
-#     if self.estimator(self.c) <= 0:
-#         if self.alp > 0:
-#             new_point = self.left_root_first()
-#         else:
-#             new_point = self.right_root_first()
-#     else:
-#         est_der_c = self.estimators_derivative(self.c)
-#         est_der_d = self.estimators_derivative(self.d)
-#         if self.find_min_under_zero(self.c, est_der_c, self.d, est_der_d):
-#             if self.bet > 0:
-#                 new_point = self.left_root_second()
-#             else:
-#                 new_point = self.right_root_second()
-#         else:
-#             if self.alp > 0:
-#                 new_point = self.left_root_third()
-#             else:
-#                 new_point = self.right_root_third()
-#     return new_point
-
-# def get_trial_point_upper(self):
-# """
-# Get trial point (zero point of upper estimate)
-# """
-# if self.estimator(self.c) >= 0:
-#     if self.alp > 0:
-#         new_point = self.right_root_first()
-#     else:
-#         new_point = self.left_root_first()
-# else:
-#     est_der_c = self.estimators_derivative(self.c)
-#     est_der_d = self.estimators_derivative(self.d)
-#     if self.find_max_above_zero(self.c, est_der_c, self.d, est_der_d):
-#         if self.bet > 0:
-#             new_point = self.right_root_second()
-#         else:
-#             new_point = self.left_root_second()
-#     else:
-#         if self.fb > 0:
-#             if self.alp > 0:
-#                 new_point = self.right_root_third()
-#             else:
-#                 new_point = self.left_root_third()
-#         else:
-#             new_point = self.b
-# return new_point

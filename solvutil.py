@@ -1,3 +1,4 @@
+import math
 import pslprocessor as pslproc
 import psqeprocessor as psqproc
 import interval as ival
@@ -6,6 +7,7 @@ import sub as sub
 from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import sys
+import processor_reduction
 
 TestResult = namedtuple('TestResult', ['nsteps', 'record_value'])
 
@@ -72,4 +74,36 @@ def psqe(prob, sym=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_i
     sl.add(subp)
     cnt = max_steps
     steps = bnb.bnb(sl, cnt, psp)
+    return TestResult(nsteps=steps, record_value=psp.rec_v)
+
+
+def new_proc(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=False,
+             known_record=False, estimator=2, reduction=1, adaptive=False):
+    fa = prob.objective(prob.a)
+    fb = prob.objective(prob.b)
+    if fa < fb:
+        rec_x = prob.a
+        rec_v = fa
+    else:
+        rec_x = prob.b
+        rec_v = fb
+
+    psp = processor_reduction.ProcessorReduction(rec_v=rec_v, rec_x=rec_x,
+                                                 problem=prob,
+                                                 eps=epsilon, global_lipint=global_lipschitz_interval,
+                                                 use_symm_lipint=symm,
+                                                 estimator=estimator, reduction=reduction, adaptive=adaptive)
+    sl = []
+    interval = ival.Interval([prob.a, prob.b])
+    data = processor_reduction.ProcData(sub_interval=interval, lip=ival.Interval([0, 0]), counter=0, period_comp_lip=0)
+    psp.update_lipschitz(data)
+    if adaptive:
+        data.period_comp_lip = int(128 / math.sqrt(data.lip.x[1] - data.lip.x[0]))
+        if data.period_comp_lip == 0:
+            data.period_comp_lip = 1
+    print(data.lip.x[1] - data.lip.x[0], data.period_comp_lip)
+    # psp.update_interval(interval)
+    sl.append(data)
+    cnt = max_steps
+    steps = bnb.bnb_fzcp(sl, cnt, psp)
     return TestResult(nsteps=steps, record_value=psp.rec_v)

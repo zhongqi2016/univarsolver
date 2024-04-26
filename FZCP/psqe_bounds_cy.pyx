@@ -388,7 +388,7 @@ cdef class PSQE_Bounds:
             if self.upper_est_der_le_0(self.d, self.b) and d3 >= 0:
                 return self.root_third_right(d3)
 
-        return None
+        return self.b
 
     cpdef check_error(self):
         if self.d > self.b:

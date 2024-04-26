@@ -13,6 +13,12 @@ class Interval:
     def __round__(self, n=3):
         return Interval([np.round(self.x[0], 3), np.round(self.x[1], 3)])
 
+    def include_zero(self) -> bool:
+        if (self.x[0] > 0 and self.x[1] > 0) or (self.x[0] < 0 and self.x[1] < 0):
+            return False
+        else:
+            return True
+
     def mid(self):
         return 0.5 * (self.x[0] + self.x[1])
 
@@ -208,13 +214,18 @@ def sqrt(x_input):
 
 
 def valueToInterval(expr):
-    if isinstance(expr, int):
+    if not isinstance(expr, Interval):
         etmp = Interval([expr, expr])
-    elif isinstance(expr, float):
-        etmp = Interval([expr, expr])
+        return etmp
     else:
-        etmp = expr
-    return etmp
+        return expr
+    # if isinstance(expr, int):
+    #     etmp = Interval([expr, expr])
+    # elif isinstance(expr, float):
+    #     etmp = Interval([expr, expr])
+    # else:
+    #     etmp = expr
+    # return etmp
 
 
 def _sin(x):

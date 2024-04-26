@@ -1,5 +1,6 @@
 import sympy as sym
-from interval import *
+import ia_math_fun as iaf
+import interval as ival
 
 
 class UniVarProblem:
@@ -18,7 +19,7 @@ class UniVarProblem:
         logger: logging function
     """
 
-    def __init__(self, name, objective, a, b, min_f, min_x, logger=lambda x: x):
+    def __init__(self, name, objective, a, b, min_f, min_x, logger=lambda x: x, preproc=False, correctly=False):
         """ Constructor
         Args:
             name: name of a test example
@@ -31,18 +32,25 @@ class UniVarProblem:
         self.name = name
         self.sym_objective = sym.sympify(objective)
         x = sym.symbols('x')
-        if self.sym_objective.subs(x, a) < 0:
+        if preproc and self.sym_objective.subs(x, a) < 0:
             self.sym_objective = -self.sym_objective
 
         self.sym_df = self.sym_objective.diff()
         self.sym_ddf = self.sym_df.diff()
-
-        module_sin = {"sin": sin}
-        module_cos = {"cos": cos}
-        module_exp = {"exp": exp}
-        # module_abs = {"abs": abs}
-        module_log = {"log": log}
-        module_sqrt = {"sqrt": sqrt}
+        if correctly:
+            module_sin = {"sin": iaf.sin}
+            module_cos = {"cos": iaf.cos}
+            module_exp = {"exp": iaf.exp}
+            # module_abs = {"abs": abs}
+            module_log = {"log": iaf.log}
+            module_sqrt = {"sqrt": iaf.sqrt}
+        else:
+            module_sin = {"sin": ival.sin}
+            module_cos = {"cos": ival.cos}
+            module_exp = {"exp": ival.exp}
+            # module_abs = {"abs": abs}
+            module_log = {"log": ival.log}
+            module_sqrt = {"sqrt": ival.sqrt}
 
         obj_f = sym.lambdify(x, self.sym_objective,
                              modules=[module_sin, module_cos, module_exp, module_log, module_sqrt])

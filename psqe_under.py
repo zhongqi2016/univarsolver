@@ -55,7 +55,7 @@ class PSQE_Under:
         else:
             return self.fb + self.dfb * (x - self.b) + 0.5 * self.alp * (x - self.b) ** 2
 
-    def nestimator(self,x):
+    def nestimator(self, x):
         return -self.estimator(x)
 
     def estimators_derivative(self, x):
@@ -107,3 +107,94 @@ class PSQE_Under:
         else:
             xs = None
         return xs
+
+    def delta_first(self):
+        return self.dfa ** 2 - 2 * self.alp * self.fa
+
+    def delta_second(self):
+        c = self.fa + self.dfa * (self.c - self.a) + self.alp / 2 * (self.c - self.a) ** 2
+        b = self.dfa + self.alp * (self.c - self.a)
+        return b ** 2 - 2 * self.bet * c
+
+    def delta_third(self):
+        return self.dfb ** 2 - 2 * self.alp * self.fb
+
+    def root_first_left(self, d1):
+        return self.a + (-self.dfa - d1 ** 0.5) / self.alp
+
+    def root_second_left(self, d2):
+        return self.c + (-self.dfa - self.alp * (self.c - self.a) - d2 ** 0.5) / self.bet
+
+    def root_third_left(self, d3):
+        return self.b + (-self.dfb - d3 ** 0.5) / self.alp
+
+    def root_first_right(self, d1):
+        return self.a + (-self.dfa + d1 ** 0.5) / self.alp
+
+    def root_second_right(self, d2):
+        return self.c + (-self.dfa - self.alp * (self.c - self.a) + d2 ** 0.5) / self.bet
+
+    def root_third_right(self, d3):
+        return self.b + (-self.dfb + d3 ** 0.5) / self.alp
+
+    def get_left_end(self):
+        # if (flag1)==true, in first section of estimator have root.
+        if self.estimator(self.c) <= 0:
+            d1 = self.delta_first()
+            return self.root_first_left(d1)
+        else:
+            d1 = self.delta_first()
+            if self.under_est_der_le_0(self.a, self.c) and d1 >= 0:
+                return self.root_first_left(d1)
+
+        if self.estimator(self.d) <= 0:
+            d2 = self.delta_second()
+            return self.root_second_left(d2)
+        else:
+            d2 = self.delta_second()
+            if self.under_est_der_le_0(self.c, self.d) and d2 >= 0:
+                return self.root_second_left(d2)
+
+        if self.estimator(self.b) <= 0:
+            d3 = self.delta_third()
+            return self.root_third_left(d3)
+        else:
+            d3 = self.delta_third()
+            if self.under_est_der_le_0(self.d, self.b) and d3 >= 0:
+                return self.root_third_left(d3)
+
+        # d3 = self.delta_third()
+        # if d3 >= 0:
+        #     return self.root_third_left(d3)
+
+        return None
+
+    def get_right_end2(self):
+        # if (flag1)==true, in first section of estimator have root.
+
+        if self.estimator(self.d) <= 0:
+            d1 = self.delta_third()
+            return self.root_third_right(d1)
+        else:
+            d1 = self.delta_third()
+            if self.under_est_der_le_0(self.d, self.b) and d1 >= 0:
+                return self.root_third_right(d1)
+        if self.estimator(self.c) <= 0:
+            d2 = self.delta_second()
+            return self.root_second_right(d2)
+        else:
+            d2 = self.delta_second()
+            if self.under_est_der_le_0(self.c, self.d) and d2 >= 0:
+                return self.root_second_right(d2)
+        if self.estimator(self.a) <= 0:
+            d3 = self.delta_first()
+            return self.root_first_right(d3)
+        else:
+            d3 = self.delta_third()
+            if self.under_est_der_le_0(self.a, self.c) and d3 >= 0:
+                return self.root_first_right(d3)
+
+        # d3 = self.delta_third()
+        # if d3 >= 0:
+        #     return self.root_third_left(d3)
+        return None

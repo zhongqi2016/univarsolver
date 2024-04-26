@@ -1,14 +1,17 @@
 import math
 
-from interval import Interval
-import psqe_bounds as psqe
+# import psqe_bounds_cy as psqe
+# import psl_bounds_cy as psl
+# from interval import Interval
+import psqe_bounds_correctly as psqe
 # import psl_bounds as psl
-import psl_bounds as psl
+import psl_bounds_correctly as psl
 import sys
 import copy
+import interval_arithmetics as ival
+import decimal as dec
 
 sys.path.append("..")
-import interval as ival
 
 
 class ProcData:
@@ -16,7 +19,7 @@ class ProcData:
     The subproblem data used in algorithm
     """
 
-    def __init__(self, sub_interval: ival.Interval, lip: ival.Interval, counter: int):
+    def __init__(self, sub_interval: ival.Interval, lip: ival.Interval, counter=0, period_comp_lip=0):
         """
         The constructor
         Args:
@@ -26,12 +29,13 @@ class ProcData:
         self.sub_interval = sub_interval
         self.lip = lip
         self.counter = counter
+        self.period_comp_lip = period_comp_lip
 
 
 class ProcessorNew:
 
     def __init__(self, rec_v, rec_x, problem, eps, global_lipint=False, use_symm_lipint=False, estimator=2,
-                 reduction=1, period_comp_lip=0):
+                 reduction=1, adaptive=False):
         """
         Initializes processor
         Args:
@@ -50,12 +54,12 @@ class ProcessorNew:
         self.rec_x = rec_x
         self.problem = problem
         self.eps = eps
-        self.ddi = problem.ddf(ival.Interval([problem.a, problem.b]))
-        self.di = problem.df(ival.Interval([problem.a, problem.b]))
+        self.ddi = problem.ddf(ival.Interval(dec.Decimal(problem.a), dec.Decimal(problem.b)))
+        self.di = problem.df(ival.Interval(dec.Decimal(problem.a), dec.Decimal(problem.b)))
         self.estimator = estimator
         self.reduction = reduction
         self.running = True
-        self.period_comp_lip = period_comp_lip
+        self.adaptive = adaptive
 
     def update_lipschitz(self, data: ProcData):
         """
@@ -65,24 +69,27 @@ class ProcessorNew:
         if self.estimator == 1:
             data.lip = self.problem.df(data.sub_interval)
             if self.use_symm_lipint:
-                L = max(-data.lip.x[0], data.lip.x[1])
-                data.lip = ival.Interval([-L, L])
+                L = max(-data.lip.a, data.lip.b)
+                data.lip = ival.Interval(-L, L)
         else:
             data.lip = self.problem.ddf(data.sub_interval)
             if self.use_symm_lipint:
-                L = max(-data.lip.x[0], data.lip.x[1])
-                data.lip = ival.Interval([-L, L])
+                L = max(-data.lip.a, data.lip.b)
+                data.lip = ival.Interval(-L, L)
 
     def compute_bounds(self, data: ProcData, under: bool):
-        a = data.sub_interval.x[0]
-        b = data.sub_interval.x[1]
+        a = data.sub_interval.a
+        b = data.sub_interval.b
+        ival_a = ival.Interval(a, a)
+        ival_b = ival.Interval(b, b)
         if self.estimator == 1:
-            return psl.PSL_Bounds(a, b, data.lip.x[0], data.lip.x[1], self.problem.objective(a),
-                                  self.problem.objective(b), under)
+            return psl.PSL_Bounds(a, b, data.lip.a, data.lip.b, self.problem.objective(ival_a),
+                                  self.problem.objective(ival_b), under)
         else:
-            return psqe.PSQE_Bounds(a=a, b=b, alp=data.lip.x[0], bet=data.lip.x[1], fa=self.problem.objective(a),
-                                    fb=self.problem.objective(b),
-                                    dfa=self.problem.df(a), dfb=self.problem.df(b), under=under)
+            return psqe.PSQE_Bounds(a=a, b=b, alp=data.lip.a, bet=data.lip.b,
+                                    ival_fa=self.problem.objective(ival_a),
+                                    ival_fb=self.problem.objective(ival_b),
+                                    ival_dfa=self.problem.df(ival_a), ival_dfb=self.problem.df(ival_b), under=under)
 
     def fzcp_process(self, data: ProcData):
         """
@@ -97,23 +104,25 @@ class ProcessorNew:
         #     return lst
         # if sub_interval.x[0] > self.rec_x:
         #     return []
-        if  sub_interval.x[1]>self.rec_x:
-            return lst
-        if self.rec_x - sub_interval.x[0] <= self.eps:
-            self.res_list.append(Interval([sub_interval.x[0], self.rec_x]))
-            # print("(%lf,%lf),f(x_r)=%lf" % (sub_interval.x[0], self.rec_x, obj(self.rec_x)))
+        if sub_interval.b>self.rec_x:return lst
+        if self.rec_x - sub_interval.a <= self.eps:
+            self.res_list.append(ival.Interval(sub_interval.a, self.rec_x))
+            # print("(%lf,%lf),f(x_r)=%lf" % (sub_interval.a, self.rec_x, obj(self.rec_x)))
             self.running = False
             return lst
-        width_of_interval = sub_interval.x[1] - sub_interval.x[0]
+        width_of_interval = sub_interval.b - sub_interval.a
 
         if not self.global_lipint:
-            if data.counter < self.period_comp_lip:
-                data.counter += 1
+            if self.adaptive:
+                if data.counter < data.period_comp_lip:
+                    data.counter += 1
+                else:
+                    self.update_lipschitz(data)
+                    data.period_comp_lip = int(512 / math.sqrt(data.lip.b - data.lip.a))
+                    # print(data.lip.b - data.lip.a, data.period_comp_lip)
+                    data.counter = 0
             else:
                 self.update_lipschitz(data)
-                self.period_comp_lip = int(128 / math.sqrt(data.lip.x[1] - data.lip.x[0]))
-                # print(data.lip.x[1] - data.lip[0], self.period_comp_lip)
-                data.counter = 0
         lower_estimator = self.compute_bounds(data, under=True)
         left_end = lower_estimator.get_left_end()
 
@@ -126,42 +135,43 @@ class ProcessorNew:
                 #         right_end = lower_estimator.get_right_end2()
                 if self.reduction == 1:
                     # if lower_estimator.get_fb() > 0:
-                    if sub_interval.x[1] < self.rec_x:
+                    if sub_interval.b < dec.Decimal(self.problem.b) and sub_interval.b < self.rec_x:
                         right_end = lower_estimator.get_right_end_under_bound()
-                    elif sub_interval.x[1] == self.rec_x:
+                    elif sub_interval.b == self.rec_x:
                         upper_estimator = self.compute_bounds(data, under=False)
                         right_end = upper_estimator.get_right_end_upper_bound()
-                        if right_end > sub_interval.x[1]:
-                            right_end = sub_interval.x[1]
+                        if right_end > sub_interval.b:
+                            right_end = sub_interval.b
                         self.rec_x = right_end
                 else:
                     right_end = None
 
             elif self.reduction == 0:
-                left_end = sub_interval.x[0]
-                right_end = sub_interval.x[1]
+                left_end = sub_interval.a
+                right_end = sub_interval.b
             split_point = left_end + (right_end - left_end) / 2
             if right_end - left_end < self.eps:
                 # If width of the interval satisfies the precision requirement
-                self.res_list.append(Interval([left_end, right_end]))
+                res_ival = ival.Interval(left_end, right_end)
+                self.res_list.append(res_ival)
                 # print("(%lf,%lf),lb=%lf,f(x2)=%lf" % (
                 #     left_end, right_end, lower_estimator.lower_bound_and_point()[1], obj(right_end)))
             else:
                 new_width = right_end - left_end
                 # print(new_width / width_of_interval)
                 if new_width / width_of_interval > 0.7:
-                    sub_1 = ival.Interval([left_end, split_point])
-                    if obj(sub_1.x[1]) <= 1e-14 :
-                        self.rec_x = sub_1.x[1]
+                    sub_1 = ival.Interval(left_end, split_point)
+                    if obj(ival.Interval(sub_1.b, sub_1.b)).b <= 0:
+                        self.rec_x = sub_1.b
                     else:
-                        data2 = ProcData(sub_interval=ival.Interval([split_point, right_end]),
-                                         lip=copy.deepcopy(data.lip), counter=data.counter)
+                        data2 = ProcData(sub_interval=ival.Interval(split_point, right_end),
+                                         lip=copy.deepcopy(data.lip), counter=data.counter,period_comp_lip=data.period_comp_lip)
                         lst.append(data2)
 
                     data.sub_interval = sub_1
                     lst.append(data)
                 else:
-                    data.sub_interval.x[0] = left_end
-                    data.sub_interval.x[1] = right_end
+                    data.sub_interval.a = left_end
+                    data.sub_interval.b = right_end
                     lst.append(data)
         return lst
