@@ -19,7 +19,7 @@ class ProcData:
     The subproblem data used in algorithm
     """
 
-    def __init__(self, sub_interval: ival.Interval, lip: ival.Interval, counter=0, period_comp_lip=0):
+    def __init__(self, sub_interval: ival.Interval, lip: ival.Interval, quadratic: bool, counter=0, period_comp_lip=0):
         """
         The constructor
         Args:
@@ -30,6 +30,7 @@ class ProcData:
         self.lip = lip
         self.counter = counter
         self.period_comp_lip = period_comp_lip
+        self.quadratic = quadratic
 
 
 class ProcessorNew:
@@ -60,6 +61,8 @@ class ProcessorNew:
         self.reduction = reduction
         self.running = True
         self.adaptive = adaptive
+        self.sign_b = True if problem.objective(
+            ival.Interval(dec.Decimal(problem.b), dec.Decimal(problem.b))).b > 0 else False
 
     def update_lipschitz(self, data: ProcData):
         """
@@ -86,6 +89,7 @@ class ProcessorNew:
             return psl.PSL_Bounds(a, b, data.lip.a, data.lip.b, self.problem.objective(ival_a),
                                   self.problem.objective(ival_b), under)
         else:
+            assert self.estimator == 2
             return psqe.PSQE_Bounds(a=a, b=b, alp=data.lip.a, bet=data.lip.b,
                                     ival_fa=self.problem.objective(ival_a),
                                     ival_fb=self.problem.objective(ival_b),
@@ -104,7 +108,7 @@ class ProcessorNew:
         #     return lst
         # if sub_interval.x[0] > self.rec_x:
         #     return []
-        if sub_interval.b>self.rec_x:return lst
+        if sub_interval.b > self.rec_x: return lst
         if self.rec_x - sub_interval.a <= self.eps:
             self.res_list.append(ival.Interval(sub_interval.a, self.rec_x))
             # print("(%lf,%lf),f(x_r)=%lf" % (sub_interval.a, self.rec_x, obj(self.rec_x)))
@@ -123,7 +127,15 @@ class ProcessorNew:
                     data.counter = 0
             else:
                 self.update_lipschitz(data)
+        if self.estimator == 1 and data.quadratic:
+            data.quadratic = False
+            self.update_lipschitz(data)
         lower_estimator = self.compute_bounds(data, under=True)
+        if not lower_estimator.normal_cd():
+            self.estimator = 1
+            data.quadratic = False
+            self.update_lipschitz(data)
+            lower_estimator = self.compute_bounds(data, under=True)
         left_end = lower_estimator.get_left_end()
 
         if left_end is not None:
@@ -135,7 +147,8 @@ class ProcessorNew:
                 #         right_end = lower_estimator.get_right_end2()
                 if self.reduction == 1:
                     # if lower_estimator.get_fb() > 0:
-                    if sub_interval.b < dec.Decimal(self.problem.b) and sub_interval.b < self.rec_x:
+                    if ((sub_interval.b < dec.Decimal(self.problem.b) and sub_interval.b < self.rec_x) or
+                            (sub_interval.b == dec.Decimal(self.problem.b) and self.sign_b)):
                         right_end = lower_estimator.get_right_end_under_bound()
                     elif sub_interval.b == self.rec_x:
                         upper_estimator = self.compute_bounds(data, under=False)
@@ -165,7 +178,9 @@ class ProcessorNew:
                         self.rec_x = sub_1.b
                     else:
                         data2 = ProcData(sub_interval=ival.Interval(split_point, right_end),
-                                         lip=copy.deepcopy(data.lip), counter=data.counter,period_comp_lip=data.period_comp_lip)
+                                         lip=copy.deepcopy(data.lip), counter=data.counter,
+                                         quadratic=True if self.estimator == 2 else False,
+                                         period_comp_lip=data.period_comp_lip)
                         lst.append(data2)
 
                     data.sub_interval = sub_1

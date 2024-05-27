@@ -55,6 +55,8 @@ class PSL_Bounds:
             self.c) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) \
             + ", fa = " + str(self.fa) + ", fb = " + str(self.fb)
 
+    def normal_cd(self) -> bool:
+        return True
     def estimator_l1(self, x: dec.Decimal):
         ival_x = int_arith.Interval(x, x)
         """ left part of linear estimator"""

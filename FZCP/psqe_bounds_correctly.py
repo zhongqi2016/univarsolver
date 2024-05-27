@@ -82,6 +82,12 @@ class PSQE_Bounds:
             self.ival_d) + ", alp = " + str(self.alp) + ", bet = " + str(self.bet) + ", fa = " + str(
             self.fa) + ", fb = " + str(self.fb) + ", dfa = " + str(self.dfa) + ", dfb = " + str(self.dfb)
 
+    def normal_cd(self) -> bool:
+        if self.ival_c.a > self.a and self.ival_d.b < self.b:
+            return True
+        else:
+            return False
+
     def estimator_q1(self, ival_x: int_arith.Interval):
         """ first part of quadratic estimator """
         return self.ival_fa + self.ival_dfa * (ival_x - self.ival_a) + 0.5 * self.ival_alp * (ival_x - self.ival_a) ** 2
@@ -321,9 +327,9 @@ class PSQE_Bounds:
             d1 = self.delta_first()
             if d1.a < 0: d1.a = int_arith.c_zero
             res = self.root_first_left(d1).a
-            if res<self.a:
+            if res < self.a:
                 print('warning: left end q1 < self.a')
-                res=self.a
+                res = self.a
             return res
         else:
             d1 = self.delta_first()
@@ -375,6 +381,7 @@ class PSQE_Bounds:
             return self.b
         if self.estimator_q1(self.ival_c).a >= 0:
             d1 = self.delta_first()
+            if d1.a < 0: d1.a = int_arith.c_zero
             res = self.root_first_right(d1).b
             if res > self.ival_c.b:
                 print('warning: right end upper bound q1 < self.c')
@@ -425,22 +432,29 @@ class PSQE_Bounds:
         if self.ival_d.b > self.b:
             print('warning: d*>b')
             return self.b
-        if self.estimator_q3(self.ival_d).b <= 0:
+        est3 = self.estimator_q3(self.ival_d)
+        if est3.a <= 0:
             d3 = self.delta_third()
+            if d3.a < 0: d3.a = int_arith.c_zero
             res = self.root_third_right(d3).b
             if res > self.b:
                 print('warning: right end under bound q3 < self.b')
                 return self.b
+            if self.ival_d.a > res:
+                print(self.root_third_right(d3))
+                print(self.root_third_left(d3))
+                print('err')
             assert self.ival_d.a <= res <= self.b
             return res
         else:
             d3 = self.delta_third()
+            if d3.a < 0: d3.a = int_arith.c_zero
             if self.under_est_der_le_0(self.ival_d, self.ival_b) and d3.a >= 0:
                 res = self.root_third_right(d3).b
                 if self.ival_d.a <= res <= self.b:
                     return res
-
-        if self.estimator_q1(self.ival_c).b <= 0:
+        est2 = self.estimator_q1(self.ival_c)
+        if est2.a <= 0:
             d2 = self.delta_second()
             if not d2.a >= 0:
                 return self.ival_d.b
@@ -452,13 +466,15 @@ class PSQE_Bounds:
             return res
         else:
             d2 = self.delta_second()
+            if d2.a < 0: d2.a = int_arith.c_zero
             if self.under_est_der_le_0(self.ival_c, self.ival_d) and d2.a >= 0:
                 res = self.root_second_right(d2).b
                 if self.ival_c.a <= res <= self.ival_d.b:
                     return res
-
-        if self.estimator_q1(self.ival_a).b <= 0:
+        est1 = self.estimator_q1(self.ival_a)
+        if est1.a <= 0:
             d1 = self.delta_first()
+            if d1.a < 0: d1.a = int_arith.c_zero
             res = self.root_first_right(d1).b
             if res > self.ival_c.b:
                 print('warning: right end under bound q1 < self.c')
@@ -467,6 +483,7 @@ class PSQE_Bounds:
             return res
         else:
             d1 = self.delta_first()
+            if d1.a < 0: d1.a = int_arith.c_zero
             if self.under_est_der_le_0(self.ival_a, self.ival_c) and d1.a >= 0:
                 res = self.root_first_right(d1).b
                 if self.a <= res <= self.ival_c.b:

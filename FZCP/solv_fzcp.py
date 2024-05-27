@@ -108,6 +108,7 @@ def correctly(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipsc
     sl = []
     interval = ival_corr.Interval(dec.Decimal(prob.a), dec.Decimal(prob.b))
     data = corrproc.ProcData(sub_interval=interval, lip=ival_corr.Interval(dec.Decimal('0'), dec.Decimal('0')),
+                             quadratic=True if estimator == 2 else False,
                              counter=0, period_comp_lip=0)
     psp.update_lipschitz(data)
     if not global_lipschitz_interval:
