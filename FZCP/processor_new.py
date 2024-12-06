@@ -128,9 +128,12 @@ class ProcessorNew:
                         if right_end > sub_interval.x[1]:
                             right_end = sub_interval.x[1]
                         self.rec_x = right_end
+                        if right_end - left_end < self.eps:
+                            self.res_list.append((Interval([left_end, right_end]), 'certain'))
+                            self.running = False
+                            return lst
                 else:
                     right_end = None
-
             elif self.reduction == 0:
                 left_end = sub_interval.x[0]
                 right_end = sub_interval.x[1]
