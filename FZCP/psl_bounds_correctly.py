@@ -49,6 +49,9 @@ class PSL_Bounds:
 
         self.ival_c = (self.ival_fa - self.ival_fb + self.ival_bet * self.ival_b - self.ival_alp * self.ival_a) / (
                 self.ival_bet - self.ival_alp)
+        print('psl:')
+        print("[a,b]=[", a, ',', b, '],', "w([a,b])=", b - a)
+        print("c*=", self.ival_c, "w(c*)=", self.ival_c.b - self.ival_c.a)
 
     def __repr__(self):
         return "Piecewise linear estimator " + "a = " + str(self.a) + ", b = " + str(self.b) + ", c = " + str(
@@ -57,6 +60,7 @@ class PSL_Bounds:
 
     def normal_cd(self) -> bool:
         return True
+
     def estimator_l1(self, x: dec.Decimal):
         ival_x = int_arith.Interval(x, x)
         """ left part of linear estimator"""
@@ -89,20 +93,18 @@ class PSL_Bounds:
     def nestimator(self, x):
         return -self.estimator(x)
 
-    def lower_bound_and_point(self):
+    def lower_bound_and_point(self) -> (dec.Decimal, dec.Decimal):
         """
         Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
         """
-        record_x = None
-        record_v = None
         if self.alp >= 0:
             record_x = self.a
-            record_v = self.fa
+            record_v = self.ival_fa.a
         elif self.bet <= 0:
             record_x = self.b
-            record_v = self.fb
+            record_v = self.ival_fb.a
         else:
-            record_x = self.ival_c.b
+            record_x = int_arith.mid(self.ival_c)
             record_v = self.estimator_l2(self.ival_c.b).a
         if not self.under:
             record_v = -record_v
@@ -149,9 +151,9 @@ class PSL_Bounds:
             return None
 
     def get_right_end_upper_bound(self):
-        if self.alp>0:
+        if self.alp > 0:
             root_of_left_part = self.ival_a - self.ival_fa / self.ival_alp
-            if root_of_left_part.b<=self.ival_c.b:
+            if root_of_left_part.b <= self.ival_c.b:
                 return root_of_left_part.b
         root_of_right_part = self.ival_b - self.ival_fb / self.ival_bet
         if root_of_right_part.b <= self.b:
@@ -162,6 +164,8 @@ class PSL_Bounds:
 
     def get_right_end_under_bound(self):
         if self.bet < 0:
+            if self.ival_fb.a <= 0:
+                return self.b
             return None
         root_of_right_part = self.ival_b - self.ival_fb / self.ival_bet
         if root_of_right_part.b >= self.ival_c.b:

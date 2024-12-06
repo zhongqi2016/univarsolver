@@ -1,17 +1,12 @@
 import math
-
-# import psqe_bounds_cy as psqe
-# import psl_bounds_cy as psl
-# from interval import Interval
 import psqe_bounds_correctly as psqe
-# import psl_bounds as psl
 import psl_bounds_correctly as psl
 import sys
 import copy
-import interval_arithmetics as ival
 import decimal as dec
 
 sys.path.append("..")
+import interval_arithmetics as ival
 
 
 class ProcData:
@@ -150,6 +145,8 @@ class ProcessorNew:
                     if ((sub_interval.b < dec.Decimal(self.problem.b) and sub_interval.b < self.rec_x) or
                             (sub_interval.b == dec.Decimal(self.problem.b) and self.sign_b)):
                         right_end = lower_estimator.get_right_end_under_bound()
+                        if right_end is None:
+                            print('err')
                     elif sub_interval.b == self.rec_x:
                         upper_estimator = self.compute_bounds(data, under=False)
                         right_end = upper_estimator.get_right_end_upper_bound()
@@ -179,7 +176,7 @@ class ProcessorNew:
                     else:
                         data2 = ProcData(sub_interval=ival.Interval(split_point, right_end),
                                          lip=copy.deepcopy(data.lip), counter=data.counter,
-                                         quadratic=True if self.estimator == 2 else False,
+                                         quadratic=data.quadratic,
                                          period_comp_lip=data.period_comp_lip)
                         lst.append(data2)
 

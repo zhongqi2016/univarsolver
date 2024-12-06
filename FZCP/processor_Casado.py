@@ -51,6 +51,9 @@ class CasProcessor:
         sub.bound[0] = bounds.x[0]
         widthX = sub.data.ival[1] - sub.data.ival[0]
         widthF = sub.bound[1] - sub.bound[0]
+        if widthF==0:
+            sub.data.split_point=(sub.data.ival[0]+sub.data.ival[0])/2
+            return
         ratio = sub.bound[1] / widthF
         if ratio <= 0.33:
             beta = 0.33 * widthX
@@ -71,7 +74,7 @@ class CasProcessor:
         obj = self.problem.objective
         # obj(1)
         if sub.bound[0] <= 0 <= sub.bound[1] and sub.data.ival[0] < self.rec_x:
-            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) < 1e-14:
+            if sub.data.ival.x[1] - sub.data.ival.x[0] < self.eps and obj(sub.data.ival.x[1]) < 0:
                 self.res_list.append(sub.data.split_point)
                 self.running = False
                 return lst

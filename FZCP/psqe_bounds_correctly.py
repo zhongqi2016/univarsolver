@@ -66,6 +66,11 @@ class PSQE_Bounds:
                               self.ival_a ** 2 - self.ival_b ** 2) / 2) / (
                               self.ival_dfb - self.ival_dfa - self.ival_alp * (self.ival_b - self.ival_a))
         self.ival_d = self.ival_c + delt
+        print('psqe:')
+        print("[a,b]=[", a, ',', b, '],', "w([a,b])=", b - a)
+        print("c*=", self.ival_c, "w(c*)=", self.ival_c.b - self.ival_c.a)
+        print("d*=", self.ival_d, "w(d*)=", self.ival_d.b - self.ival_d.a)
+
         # if self.c > self.b:
         #     print('error c>b')
         #     print('a=', self.a, 'b=', self.b, 'c=', self.c, 'delt=', delt, 'fa=', self.fa, 'fb=', self.fb, 'alp=',
@@ -103,7 +108,7 @@ class PSQE_Bounds:
         """ third part of quadratic estimator """
         return self.ival_fb + self.ival_dfb * (ival_x - self.ival_b) + 0.5 * self.ival_alp * (ival_x - self.ival_b) ** 2
 
-    def estimator(self, x: dec.Decimal):
+    def estimator(self, x) -> int_arith.Interval:
         """
         The piecewise quadratic underestimator
         Args:
@@ -112,17 +117,13 @@ class PSQE_Bounds:
         Returns: underestimator's value
         """
         ival_x = int_arith.Interval(x, x)
-        if x <= self.ival_c.a:
+        if x <= self.ival_c.b:
             res = self.estimator_q1(ival_x)
-        elif x < self.ival_d:
+        elif x < self.ival_d.a:
             res = self.estimator_q2(ival_x)
         else:
             res = self.estimator_q3(ival_x)
-
-        # if self.under:
         return res
-        # else:
-        #     return -res
 
     def get_fb(self):
         return self.fb
@@ -139,7 +140,7 @@ class PSQE_Bounds:
     def estd_q3(self, ival_x: int_arith.Interval):
         return self.ival_dfb + self.ival_alp * (ival_x - self.ival_b)
 
-    def estimators_derivative(self, ival_x: int_arith.Interval):
+    def estimators_derivative(self, ival_x: int_arith.Interval) -> int_arith.Interval:
         """
         The piecewise linear underestimator's derivative
         Args:
@@ -147,36 +148,51 @@ class PSQE_Bounds:
 
         Returns: underestimator's derivative value
         """
-        if ival_x.b < self.ival_c.a:
+        if ival_x.b < self.ival_c.b:
             res = self.estd_q1(ival_x)
         elif ival_x.b < self.ival_d.a:
             res = self.estd_q2(ival_x)
         else:
             res = self.estd_q3(ival_x)
-        # if self.under:
         return res
-        # else:
-        #     return -res
 
-    def lower_bound_and_point(self):
+    def lower_bound_and_point(self) -> (dec.Decimal, dec.Decimal):
         """
         Returns: Tuple (point where it is achieved, lower bound on interval [a,b])
         """
-        x_list = [self.a, self.c, self.d, self.b]
+        x_list = [self.ival_a, self.ival_c, self.ival_d, self.ival_b]
         df_list = [self.estimators_derivative(x) for x in x_list]
-        check_list = [self.a, self.b]
-        record_x = None
-        record_v = None
-        ln = len(x_list)
-        for i in range(ln - 1):
-            x = self.find_argmin(x_list[i], df_list[i], x_list[i + 1], df_list[i + 1])
-            if not (x is None):
-                check_list.append(x)
-        for x in check_list:
-            v = self.estimator(x)
-            if record_v is None or v < record_v:
+        record_x = self.a
+        record_v = self.estimator_q1(self.ival_a).a
+        if df_list[3].a < 0:
+            v = self.estimator_q3(self.ival_b).a
+            if v < record_v:
                 record_v = v
-                record_x = x
+                record_x = self.b
+
+        # seq1
+        x = self.find_argmin(x_list[0], df_list[0], x_list[1], df_list[1])
+        if not (x is None):
+            v = self.estimator_q1(x).a
+            if v < record_v:
+                record_v = v
+                record_x = x.a
+        # seq2
+        x = self.find_argmin(x_list[1], df_list[1], x_list[2], df_list[2])
+        if not (x is None):
+            v = self.estimator_q2(x).a
+            if v < record_v:
+                record_v = v
+                record_x = x.a
+
+        # seq3
+        x = self.find_argmin(x_list[2], df_list[2], x_list[3], df_list[3])
+        if not (x is None):
+            v = self.estimator_q3(x).a
+            if v < record_v:
+                record_v = v
+                record_x = x.a
+
         if not self.under:
             record_v = -record_v
         return record_x, record_v
@@ -201,68 +217,15 @@ class PSQE_Bounds:
         """
         return (self.a, self.fa) if self.fa <= self.fb else (self.b, self.fb)
 
-    def find_argmin(self, x1, df1, x2, df2):
-        if df1 == 0 and df2 == 0:
-            xs = 0.5 * (x1 + x2)
-        elif df1 <= 0 <= df2:
+    def find_argmin(self, x1: int_arith.Interval, df1: int_arith.Interval, x2: int_arith.Interval,
+                    df2: int_arith.Interval):
+        df1.b = df1.a
+        df2.a = df2.b
+        if df1.a <= 0 <= df2.b:
             xs = x1 + (-df1) * (x2 - x1) / (df2 - df1)
         else:
             xs = None
         return xs
-
-    def find_min_under_zero(self, x1, df1, x2, df2):
-        if df1 > 0 and df2 > 0:
-            if self.estimator(x1) <= 0:
-                return True
-            else:
-                return False
-        elif df1 < 0 and df2 < 0:
-            if self.estimator(x2) <= 0:
-                return True
-            else:
-                return False
-        elif df1 < 0:
-            if self.estimator(x1 + (-df1) * (x2 - x1) / (df2 - df1)) <= 0:
-                return True
-            else:
-                return False
-        else:
-            if self.estimator(x1) <= 0:
-                return True
-            else:
-                if self.estimator(x2) <= 0:
-                    return True
-                else:
-                    return False
-
-    def find_max_above_zero(self, x1, df1, x2, df2):
-        """
-            Return True if the maximum value of f(x)>0 (x in [x1,x2]), otherwise return False
-        """
-        if df1 > 0 and df2 > 0:
-            if self.estimator(x2) >= 0:
-                return True
-            else:
-                return False
-        elif df1 < 0 and df2 < 0:
-            if self.estimator(x1) >= 0:
-                return True
-            else:
-                return False
-        elif df1 > 0:
-            max_x = x1 + (-df1) * (x2 - x1) / (df2 - df1)
-            if self.estimator(max_x) >= 0:
-                return True
-            else:
-                return False
-        else:
-            if self.estimator(x1) >= 0:
-                return True
-            else:
-                if self.estimator(x2) >= 0:
-                    return True
-                else:
-                    return False
 
     def under_est_der_le_0(self, num1: int_arith.Interval, num2: int_arith.Interval):
         """
@@ -271,17 +234,6 @@ class PSQE_Bounds:
         est_der_num1 = self.estimators_derivative(num1)
         est_der_num2 = self.estimators_derivative(num2)
         if est_der_num1.a < 0 and est_der_num2.b > 0:
-            return True
-        else:
-            return False
-
-    def upper_est_der_le_0(self, num1, num2):
-        """
-        if(\phi'(num1) * \phi'(num2)<0) return true, else return false.
-        """
-        est_der_num1 = self.estimators_derivative(num1)
-        est_der_num2 = self.estimators_derivative(num2)
-        if est_der_num1 > 0 and est_der_num2 < 0:
             return True
         else:
             return False
@@ -321,53 +273,33 @@ class PSQE_Bounds:
         if self.ival_c.a < self.a:
             print('warning: c*<a')
             return self.a
-        est1 = self.estimator_q1(self.ival_c)
 
-        if est1.a <= 0:
-            d1 = self.delta_first()
+        d1 = self.delta_first()
+        if d1.b >= 0:
             if d1.a < 0: d1.a = int_arith.c_zero
+            rl = self.root_first_left(d1)
+            rr = self.root_first_right(d1)
             res = self.root_first_left(d1).a
-            if res < self.a:
-                print('warning: left end q1 < self.a')
-                res = self.a
-            return res
-        else:
-            d1 = self.delta_first()
-            if self.under_est_der_le_0(self.ival_a, self.ival_c) and d1.a >= 0:
-                res = self.root_first_left(d1).a
-                if self.a <= res <= self.ival_c.b:
-                    return res
-        est2 = self.estimator_q3(self.ival_d)
-        if est2.a <= 0:
-            d2 = self.delta_second()
+            if self.a <= res <= self.ival_c.b:
+                return res
+
+        d2 = self.delta_second()
+        if d2.b >= 0:
             if d2.a < 0: d2.a = int_arith.c_zero
+            rl = self.root_second_left(d2)
+            rr = self.root_second_right(d2)
             res = self.root_second_left(d2).a
-            if res < self.ival_c.a:
-                print('warning: left end q2 < self.c')
-                return self.ival_c.a
-            return res
-        else:
-            d2 = self.delta_second()
-            if self.under_est_der_le_0(self.ival_c, self.ival_d) and d2.a >= 0:
-                res = self.root_second_left(d2).a
-                if self.ival_c.a <= res <= self.ival_d.b:
-                    return res
-        est3 = self.estimator_q3(self.ival_b)
-        if est3.a <= 0:
-            d3 = self.delta_third()
+            if self.ival_c.a <= res <= self.ival_d.b:
+                return res
+
+        d3 = self.delta_third()
+        if d3.b >= 0:
             if d3.a < 0: d3.a = int_arith.c_zero
+            rl = self.root_third_left(d3)
+            rr = self.root_third_right(d3)
             res = self.root_third_left(d3).a
-            if res < self.ival_d.a:
-                print('warning: left end q3 < self.d')
-                return self.ival_d.a
-            assert self.ival_d.a <= res <= self.b
-            return res
-        else:
-            d3 = self.delta_third()
-            if self.under_est_der_le_0(self.ival_d, self.ival_b) and d3.a >= 0:
-                res = self.root_third_left(d3).a
-                if self.ival_d.a <= res <= self.b:
-                    return res
+            if self.ival_d.a <= res <= self.b:
+                return res
 
         # d3 = self.delta_third()
         # if d3 >= 0:
@@ -379,51 +311,27 @@ class PSQE_Bounds:
         if self.ival_c.a < self.a:
             print('warning: c*<a')
             return self.b
-        if self.estimator_q1(self.ival_c).a >= 0:
-            d1 = self.delta_first()
+
+        d1 = self.delta_first()
+        if d1.b >= 0:
             if d1.a < 0: d1.a = int_arith.c_zero
             res = self.root_first_right(d1).b
-            if res > self.ival_c.b:
-                print('warning: right end upper bound q1 < self.c')
-                return self.ival_c.b
-            assert self.a <= res <= self.ival_c.b
-            return res
-        else:
-            d1 = self.delta_first()
-            if self.under_est_der_le_0(self.ival_a, self.ival_c) and d1.a >= 0:
-                res = self.root_first_right(d1).b
-                if self.a <= res <= self.ival_c.b:
-                    return res
-        if self.estimator_q3(self.ival_d).a >= 0:
-            d2 = self.delta_second()
-            if not d2.a >= 0:
-                return self.ival_d.b
+            if self.a <= res <= self.ival_c.b:
+                return res
+
+        d2 = self.delta_second()
+        if d2.b >= 0:
+            if d2.a < 0: d2.a = int_arith.c_zero
             res = self.root_second_right(d2).b
-            if res > self.ival_d.b:
-                print('warning: right end upper bound q2 < self.d')
-                return self.ival_d.b
-            assert self.ival_c.a <= res <= self.ival_d.b
-            return res
-        else:
-            d2 = self.delta_second()
-            if self.under_est_der_le_0(self.ival_c, self.ival_d) and d2.a >= 0:
-                res = self.root_second_right(d2).b
-                if self.ival_c.a <= res <= self.ival_d.b:
-                    return res
-        if self.estimator_q3(self.ival_b).a >= 0:
-            d3 = self.delta_third()
+            if self.ival_c.a <= res <= self.ival_d.b:
+                return res
+
+        d3 = self.delta_third()
+        if d3.b >= 0:
+            if d3.a < 0: d3.a = int_arith.c_zero
             res = self.root_third_right(d3).b
-            if res > self.b:
-                print('warning: right end upper bound q3 < self.b')
-                return self.b
-            assert self.ival_d.a <= res <= self.b
-            return res
-        else:
-            d3 = self.delta_third()
-            if self.under_est_der_le_0(self.ival_d, self.ival_b) and d3.a >= 0:
-                res = self.root_third_right(d3).b
-                if self.ival_d.a <= res <= self.b:
-                    return res
+            if self.ival_d.a <= res <= self.b:
+                return res
 
         return self.b
 
@@ -432,61 +340,29 @@ class PSQE_Bounds:
         if self.ival_d.b > self.b:
             print('warning: d*>b')
             return self.b
-        est3 = self.estimator_q3(self.ival_d)
-        if est3.a <= 0:
-            d3 = self.delta_third()
+        d3 = self.delta_third()
+        if d3.b >= 0:
             if d3.a < 0: d3.a = int_arith.c_zero
-            res = self.root_third_right(d3).b
-            if res > self.b:
-                print('warning: right end under bound q3 < self.b')
+            res = self.root_third_right(d3)
+            if res.b > self.b > res.a:
                 return self.b
-            if self.ival_d.a > res:
-                print(self.root_third_right(d3))
-                print(self.root_third_left(d3))
-                print('err')
-            assert self.ival_d.a <= res <= self.b
-            return res
-        else:
-            d3 = self.delta_third()
-            if d3.a < 0: d3.a = int_arith.c_zero
-            if self.under_est_der_le_0(self.ival_d, self.ival_b) and d3.a >= 0:
-                res = self.root_third_right(d3).b
-                if self.ival_d.a <= res <= self.b:
-                    return res
-        est2 = self.estimator_q1(self.ival_c)
-        if est2.a <= 0:
-            d2 = self.delta_second()
-            if not d2.a >= 0:
-                return self.ival_d.b
-            res = self.root_second_right(d2).b
-            if res > self.ival_d.b:
-                print('warning: right end under bound q2 < self.d')
-                return self.ival_d.b
-            assert self.ival_c.a <= res <= self.ival_d.b
-            return res
-        else:
-            d2 = self.delta_second()
+            if res.b >= self.ival_d.a:
+                return res.b
+        d2 = self.delta_second()
+        if d2.b >= 0:
             if d2.a < 0: d2.a = int_arith.c_zero
-            if self.under_est_der_le_0(self.ival_c, self.ival_d) and d2.a >= 0:
-                res = self.root_second_right(d2).b
-                if self.ival_c.a <= res <= self.ival_d.b:
-                    return res
-        est1 = self.estimator_q1(self.ival_a)
-        if est1.a <= 0:
-            d1 = self.delta_first()
+            res = self.root_second_right(d2)
+            if res.b > self.ival_d.a > res.a:
+                return self.ival_d.a
+            if self.ival_c.b <= res.b:
+                return res.b
+        d1 = self.delta_first()
+        if d1.b >= 0:
             if d1.a < 0: d1.a = int_arith.c_zero
-            res = self.root_first_right(d1).b
-            if res > self.ival_c.b:
-                print('warning: right end under bound q1 < self.c')
+            res = self.root_first_right(d1)
+            if res.b > self.ival_c.b > res.a:
                 return self.ival_c.b
-            assert self.a <= res <= self.ival_c.b
-            return res
-        else:
-            d1 = self.delta_first()
-            if d1.a < 0: d1.a = int_arith.c_zero
-            if self.under_est_der_le_0(self.ival_a, self.ival_c) and d1.a >= 0:
-                res = self.root_first_right(d1).b
-                if self.a <= res <= self.ival_c.b:
-                    return res
+            if self.a <= res.b <= self.ival_c.b:
+                return res.b
 
         return None

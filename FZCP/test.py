@@ -487,11 +487,10 @@ def max_abs(matrix):
     return max_value
 
 
-def test_last(df, eps, repeat):
+def test_last(df, eps, repeat, global_lip=True):
     # print('test.Index,PC_N,PI_N,QC_N,QI_N,PC_R,PI_R,QC_R,QI_R')
     time_list = np.zeros((len(list(df.itertuples())), 9), dtype=float)
     it_list = np.zeros((len(list(df.itertuples())), 9), dtype=int)
-    global_lip = True
     for num in range(0, repeat):
         i = 0
         for test in df.itertuples():
@@ -503,14 +502,15 @@ def test_last(df, eps, repeat):
                                       lambda x: log_point(x, points_db[test.Index]['bnb2_pslint_points_list']), True)
 
             T1 = time.perf_counter()
-            Cas = sfzcp.cas(prob=prob, sym=False, epsilon=eps).nsteps
+            Cas = sfzcp.cas(prob=prob, sym=False, epsilon=eps * (test.b - test.a)).nsteps
             T2 = time.perf_counter()
             time_Cas = (T2 - T1)
             it_list_row[0] = Cas
             time_list_row[0] += time_Cas / repeat * 1000
 
             T1 = time.perf_counter()
-            PC_N = sfzcp.new_method(prob, symm=True, epsilon=eps, global_lipschitz_interval=global_lip, estimator=1,
+            PC_N = sfzcp.new_method(prob, symm=True, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=1,
                                     reduction=0).nsteps
             T2 = time.perf_counter()
             time_PC_N = (T2 - T1)
@@ -518,7 +518,8 @@ def test_last(df, eps, repeat):
             time_list_row[1] += time_PC_N / repeat * 1000
 
             T1 = time.perf_counter()
-            PI_N = sfzcp.new_method(prob, symm=False, epsilon=eps, global_lipschitz_interval=global_lip, estimator=1,
+            PI_N = sfzcp.new_method(prob, symm=False, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=1,
                                     reduction=0).nsteps
             T2 = time.perf_counter()
             time_PI_N = (T2 - T1)
@@ -526,7 +527,8 @@ def test_last(df, eps, repeat):
             time_list_row[2] += time_PI_N / repeat * 1000
 
             T1 = time.perf_counter()
-            QC_N = sfzcp.new_method(prob, symm=True, epsilon=eps, global_lipschitz_interval=global_lip, estimator=2,
+            QC_N = sfzcp.new_method(prob, symm=True, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=2,
                                     reduction=0).nsteps
             T2 = time.perf_counter()
             time_QC_N = (T2 - T1)
@@ -534,7 +536,8 @@ def test_last(df, eps, repeat):
             time_list_row[3] += time_QC_N / repeat * 1000
 
             T1 = time.perf_counter()
-            QI_N = sfzcp.new_method(prob, symm=False, epsilon=eps, global_lipschitz_interval=global_lip, estimator=2,
+            QI_N = sfzcp.new_method(prob, symm=False, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=2,
                                     reduction=0).nsteps
             T2 = time.perf_counter()
             time_QI_N = (T2 - T1)
@@ -542,7 +545,8 @@ def test_last(df, eps, repeat):
             time_list_row[4] += time_QI_N / repeat * 1000
 
             T1 = time.perf_counter()
-            PC_R = sfzcp.new_method(prob, symm=True, epsilon=eps, global_lipschitz_interval=global_lip, estimator=1,
+            PC_R = sfzcp.new_method(prob, symm=True, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=1,
                                     reduction=1).nsteps
             T2 = time.perf_counter()
             time_PC_R = (T2 - T1)
@@ -550,7 +554,8 @@ def test_last(df, eps, repeat):
             time_list_row[5] += time_PC_R / repeat * 1000
 
             T1 = time.perf_counter()
-            PI_R = sfzcp.new_method(prob, symm=False, epsilon=eps, global_lipschitz_interval=global_lip, estimator=1,
+            PI_R = sfzcp.new_method(prob, symm=False, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=1,
                                     reduction=1).nsteps
             T2 = time.perf_counter()
             time_PI_R = (T2 - T1)
@@ -558,7 +563,8 @@ def test_last(df, eps, repeat):
             time_list_row[6] += time_PI_R / repeat * 1000
 
             T1 = time.perf_counter()
-            QC_R = sfzcp.new_method(prob, symm=True, epsilon=eps, global_lipschitz_interval=global_lip, estimator=2,
+            QC_R = sfzcp.new_method(prob, symm=True, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=2,
                                     reduction=1).nsteps
             T2 = time.perf_counter()
             time_QC_R = (T2 - T1)
@@ -566,7 +572,8 @@ def test_last(df, eps, repeat):
             time_list_row[7] += time_QC_R / repeat * 1000
 
             T1 = time.perf_counter()
-            QI_R = sfzcp.new_method(prob, symm=False, epsilon=eps, global_lipschitz_interval=global_lip, estimator=2,
+            QI_R = sfzcp.new_method(prob, symm=False, epsilon=eps * (test.b - test.a),
+                                    global_lipschitz_interval=global_lip, estimator=2,
                                     reduction=1).nsteps
             T2 = time.perf_counter()
             time_QI_R = (T2 - T1)
@@ -592,7 +599,7 @@ def test_last(df, eps, repeat):
     # test.Index, time_PC_N, time_PI_N, time_QC_N, time_QI_N, time_PC_R, time_PI_R, time_QC_R, time_QI_R))
 
     index = 0
-    print('test.Index,PL_N,PI_N,QL_N,QI_N,PL_R,PI_R,QL_R,QI_R')
+    print('test.Index,IBB,PL_N,PI_N,QL_N,QI_N,PL_R,PI_R,QL_R,QI_R')
     for time_row in time_list:
         index = index + 1
         print('%d & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f \\\\' % (index,
@@ -620,7 +627,7 @@ def test_last(df, eps, repeat):
     print_row3(avg_list, 'Average')
 
     index = 0
-    print('test.Index,PL_N,PI_N,QL_N,QI_N,PL_R,PI_R,QL_R,QI_R')
+    print('test.Index,IBB,PL_N,PI_N,QL_N,QI_N,PL_R,PI_R,QL_R,QI_R')
     for it_row in it_list:
         index = index + 1
         print('%d & %d & %d & %d & %d & %d & %d & %d & %d & %d \\\\' % (index,

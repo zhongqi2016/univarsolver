@@ -1,13 +1,8 @@
 import math
-
-# import psqe_bounds_cy as psqe
-# import psl_bounds_cy as psl
 import FZCP.psqe_bounds as psqe
 import FZCP.psl_bounds as psl
-import sys
 import copy
 
-sys.path.append("..")
 import interval as ival
 
 

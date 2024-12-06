@@ -1,13 +1,18 @@
 import math
+
+import interval_arithmetics
 import pslprocessor as pslproc
 import psqeprocessor as psqproc
 import interval as ival
+import decimal as dec
+import interval_arithmetics as ival_corr
 import bnb as bnb
 import sub as sub
 from sortedcontainers import SortedKeyList
 from collections import namedtuple
 import sys
 import processor_reduction
+import processor_reduction_correctly
 
 TestResult = namedtuple('TestResult', ['nsteps', 'record_value'])
 
@@ -107,3 +112,39 @@ def new_proc(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipsch
     cnt = max_steps
     steps = bnb.bnb_fzcp(sl, cnt, psp)
     return TestResult(nsteps=steps, record_value=psp.rec_v)
+
+
+def proc_corr(prob, symm=True, max_steps=sys.maxsize, epsilon=1e-2, global_lipschitz_interval=False,
+              estimator=2, reduction=1, adaptive=False):
+    fa = prob.objective(interval_arithmetics.Interval(dec.Decimal(prob.a), dec.Decimal(prob.a)))
+    fb = prob.objective(interval_arithmetics.Interval(dec.Decimal(prob.b), dec.Decimal(prob.b)))
+    if fa.a < fb.a:
+        rec_x = dec.Decimal(prob.a)
+        rec_v = fa
+    else:
+        rec_x = dec.Decimal(prob.b)
+        rec_v = fb
+
+    psp = processor_reduction_correctly.ProcessorReduction(rec_v=rec_v, rec_x=rec_x,
+                                                           problem=prob,
+                                                           eps=epsilon, global_lipint=global_lipschitz_interval,
+                                                           use_symm_lipint=symm,
+                                                           estimator=estimator, reduction=reduction, adaptive=adaptive)
+    sl = []
+    interval = ival_corr.Interval(dec.Decimal(prob.a), dec.Decimal(prob.b))
+    data = processor_reduction_correctly.ProcData(sub_interval=interval,
+                                                  lip=ival_corr.Interval(dec.Decimal('0'), dec.Decimal('0')),
+                                                  quadratic=estimator == 2,
+                                                  counter=0,
+                                                  period_comp_lip=0)
+    psp.update_lipschitz(data)
+    if adaptive:
+        data.period_comp_lip = int(128 / math.sqrt(data.lip.b - data.lip.a))
+        if data.period_comp_lip == 0:
+            data.period_comp_lip = 1
+    print(data.lip.b - data.lip.a, data.period_comp_lip)
+    # psp.update_interval(interval)
+    sl.append(data)
+    cnt = max_steps
+    steps = bnb.bnb_fzcp(sl, cnt, psp)
+    return TestResult(nsteps=steps, record_value=psp.rec_x)

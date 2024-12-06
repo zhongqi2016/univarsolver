@@ -8,7 +8,7 @@ default_graphic_tips = {'function': 'b-', 'legend_colors': ['r', 'g', 'brown', '
                         'legend_sizes': [1, 1, 1, 1, 1, 1, 1, 1]}
 
 
-def plot_problem(prob, tips=default_graphic_tips, npoints=1000, legend=2):
+def plot_problem(prob,  tips=default_graphic_tips, npoints=1000, legend=2):
     """
        Plots a problem
        

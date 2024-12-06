@@ -91,16 +91,10 @@ class ProcessorNew:
         sub_interval = data.sub_interval
         lst = []
         obj = self.problem.objective
-        # if self.rec_x - sub.data.ival.x[0] <= self.eps:
-        #     self.res_list.append(sub.data.ival.x[0])
-        #     self.running = False
-        #     return lst
-        # if sub_interval.x[0] > self.rec_x:
-        #     return []
-        if  sub_interval.x[1]>self.rec_x:
+        if sub_interval.x[1] > self.rec_x:
             return lst
         if self.rec_x - sub_interval.x[0] <= self.eps:
-            self.res_list.append(Interval([sub_interval.x[0], self.rec_x]))
+            self.res_list.append((Interval([sub_interval.x[0], self.rec_x]), 'certain'))
             # print("(%lf,%lf),f(x_r)=%lf" % (sub_interval.x[0], self.rec_x, obj(self.rec_x)))
             self.running = False
             return lst
@@ -143,7 +137,7 @@ class ProcessorNew:
             split_point = left_end + (right_end - left_end) / 2
             if right_end - left_end < self.eps:
                 # If width of the interval satisfies the precision requirement
-                self.res_list.append(Interval([left_end, right_end]))
+                self.res_list.append((Interval([left_end, right_end]), 'uncertain'))
                 # print("(%lf,%lf),lb=%lf,f(x2)=%lf" % (
                 #     left_end, right_end, lower_estimator.lower_bound_and_point()[1], obj(right_end)))
             else:
@@ -151,7 +145,7 @@ class ProcessorNew:
                 # print(new_width / width_of_interval)
                 if new_width / width_of_interval > 0.7:
                     sub_1 = ival.Interval([left_end, split_point])
-                    if obj(sub_1.x[1]) <= 1e-14 :
+                    if obj(sub_1.x[1]) <= 0:
                         self.rec_x = sub_1.x[1]
                     else:
                         data2 = ProcData(sub_interval=ival.Interval([split_point, right_end]),

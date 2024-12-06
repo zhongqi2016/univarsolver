@@ -187,8 +187,8 @@ def exp(x):
     --------
     Enclosing interval for exp(x)
     """
-    a = _exp_lb(ia.Interval(x.a, x.a))
-    b = _exp_ub(ia.Interval(x.b, x.b))
+    a = _exp_lb(x)
+    b = _exp_ub(x)
     return ia.Interval(a, b)
 
 
@@ -614,4 +614,4 @@ def sqrt(x_input):
     if isinstance(x_input, ia.Interval):
         return x_input.sqrt()
     else:
-        print('input is not interval')
+        return math.sqrt(x_input)
